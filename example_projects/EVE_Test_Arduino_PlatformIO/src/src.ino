@@ -14,6 +14,8 @@
 
 void setup()
 {
+	//while(!Serial);
+	Serial.println("Setup");
 	pinMode(EVE_CS, OUTPUT);
 	digitalWrite(EVE_CS, HIGH);
 	pinMode(EVE_PDN, OUTPUT);
@@ -26,14 +28,18 @@ void setup()
 	EVE_init_spi();
 #else
 	SPI.begin(); /* sets up the SPI to run in Mode 0 and 1 MHz */
-	SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
+	SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
 #endif
+	Serial.println("SPI Init");
 
 	TFT_init();
+
+	Serial.println("TFT Init");
 
 #if defined (ESP8266)
 	SPI.setFrequency(16000000);
 #endif
+	Serial.println("Loop");
 }
 
 void loop()
