@@ -8,28 +8,7 @@ https://brtchip.com/bt81x/
 
 It contains code for and has been used with various micro-controllers and displays.
 
-## Controllers
-
-I have used it so far with:
-
-- 8-Bit AVR, specifically the 90CAN series
-- Arduino: Uno, mini-pro, ESP8266, ESP32 (DMA), Metro-M4 (DMA), STM32 Nucleo_F446RE (DMA)
-- Renesas F1L RH850
-- Infineon Aurix TC222
-- ATSAMC21E18A (DMA)
-- ATSAME51J19A (DMA)
-- ESP32 (DMA)
-- RP2040 (DMA) - Raspberry Pi Pico
-
-I have reports of successfully using it with:
-
-- ATSAMV70
-- ATSAMD20
-- ATSAME4
-- MSP430
-- MSP432
-- some PICs
-- ATxmega128A1
+Optimized for Teensy 4.1
 
 ## Displays
 
