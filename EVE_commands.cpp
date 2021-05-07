@@ -1,4 +1,4 @@
-#include "EVE.h"
+#include "EVE_commands.h"
 
 #if EVE_GEN > 2
 #include <stdarg.h>
@@ -102,8 +102,6 @@ namespace EVE
 	/* helper function, write a block of memory from the FLASH of the host controller to EVE */
 	void Display::memWrite_flash_buffer(uint32_t ftAddress, const uint8_t *data, uint32_t len)
 	{
-		uint32_t count;
-
 		port.cs_set();
 		port.transmit((uint8_t)(ftAddress >> 16) | MEM_WRITE);
 		port.transmit((uint8_t)(ftAddress >> 8));
@@ -111,10 +109,7 @@ namespace EVE
 
 		len = (len + 3)&(~3);
 
-		for(count=0;count<len;count++)
-		{
-			port.transmit(data+count);
-		}
+		port.transmit(data, len);
 
 		port.cs_clear();
 	}
@@ -1167,12 +1162,6 @@ namespace EVE
 		memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
 		memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
 
-		#if defined (EVE_ADAM101)
-		memWrite8(REG_PWM_DUTY, 0x60); /* turn on backlight to 25% for Glyn ADAM101 module, it uses inverted values */
-		#else
-		memWrite8(REG_PWM_DUTY, 0x20); /* turn on backlight to 25% for any other module */
-		#endif
-
 		timeout = 0;
 		while(busy() == 1) /* just to be safe, should not even enter the loop */
 		{
@@ -1302,9 +1291,15 @@ namespace EVE
 		/* activate this if you are using a module for the first time or if you need to re-calibrate it */
 		/* write down the numbers on the screen and either place them in one of the pre-defined blocks above or make a new block */
 		#else
+		
+			#if defined (EVE_ADAM101)
+			memWrite8(REG_PWM_DUTY, 0x00); /* turn on backlight to 25% for Glyn ADAM101 module, it uses inverted values */
+			#else
+			memWrite8(REG_PWM_DUTY, 0xFF); /* turn on backlight to 25% for any other module */
+			#endif
 			/* calibrate touch and displays values to screen */
 			cmd_dl(CMD_DLSTART);
-			cmd_dl(DL_CLEAR_RGB | BLACK);
+			cmd_dl(DL_CLEAR_RGB);
 			cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
 			cmd_text((EVE_HSIZE/2), 50, 26, EVE_OPT_CENTER, "Please tap on the dot.");
 			cmd_calibrate();
@@ -1322,7 +1317,7 @@ namespace EVE
 			touch_f = memRead32(REG_TOUCH_TRANSFORM_F);
 
 			cmd_dl(CMD_DLSTART);
-			cmd_dl(DL_CLEAR_RGB | BLACK);
+			cmd_dl(DL_CLEAR_RGB);
 			cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
 			cmd_dl(TAG(0));
 
@@ -1348,6 +1343,11 @@ namespace EVE
 			while(1);
 		#endif
 
+			#if defined (EVE_ADAM101)
+			memWrite8(REG_PWM_DUTY, 0x00); /* turn on backlight to 25% for Glyn ADAM101 module, it uses inverted values */
+			#else
+			memWrite8(REG_PWM_DUTY, 0xFF); /* turn on backlight to 25% for any other module */
+			#endif
 		return 1;
 	}
 

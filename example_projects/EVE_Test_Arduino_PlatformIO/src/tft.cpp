@@ -6,7 +6,7 @@
 @author  Rudolph Riedel, modified by Linar Ismagilov
 */
 
-#include "EVE.h"
+#include "FT8XX.h"
 #include "tft_data.h"
 
 EVE::Display display;
