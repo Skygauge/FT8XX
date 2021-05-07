@@ -9,7 +9,7 @@
 
 MIT License
 
-Copyright (c) 2016-2021 Rudolph Riedel
+Copyright (c) 2016-2021 Rudolph Riedel, Modified by Linar Ismagilov
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute,
@@ -21,47 +21,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-@section History
-
-4.0
-- renamed from EVE_config.h to EVE_config.h
-- renamed EVE_81X_ENABLE to FT81X_ENABLE
-- added a fictitious BT81x entry under the made-up name EVE_EVE3_70G, just to see the project compile with additional BT81x includes and functions
-- added profiles for the BT81x 4.3", 5" and 7" modules from Riverdi - the only tested is the 4.3" with a RVT43ULBNWC00
-- moved all target specific lines from EVE_config.h to EVE_target.h
-- cleaned up history
-- added profiles for EVE3-35G, EVE3-43G, EVE3-50G
-- added a profile for the CFAF800480E0-050SC from Crystalfontz
-- changed EVE_RiTFT50 to use the RVT70 config instead of the RVT50 config since RVT50 uses a different HOFFSET value
-- added EVE_PAF90, a profile for the PAF90B5WFNWC01 from Panasys
-- added EVE_EVE3_35, EVE_EVE3_43, EVE_EVE3_50 and EVE_EVE3_70 - the resistive touch BT816 versions of the EVE3 series
-- added a profile for the Sunflower Arduino Shield
-- looked into adding Gameduino3 / Gameduino3X profiles but there are no documented timing parameters for these panels
-- added a profile for the MikroElektronika ConnectEVE module
-- added a profile for the CFAF240400C0-030SC from Crystalfontz
-- added a profile for the CFAF480128A0-039TC from Crystalfontz
-- added a profile for the CFAF320240F-035T from Crystalfontz
-- condensed several equal timing sets into fewer profiles
-- added 4D Systems GEN4-FT81x-xx profiles
-- removed parameter: EVE_CSPREAD - left on default=1 for all displays now
-- adjusted several PCLK settings to bring the frame-rates closer to 60Hz
-- sorted displays by resolution
-- added profiles for EVE3x-39A/EVE3x-39G
-- updated EVE3x-39A/EVE3x-39G profiles
-- added EVE_NHD_43_800480 for the NHD-4.3-800480FT-CSXP-CTP from Newhaven
-
-5.0
-- re-added the EVE_CSPREAD parameters to all profiles
-- added a profile for the Gameduino3 shield
-- cleanup: removed FT80x profiles
-- replaced FT81x_enable and BT81x_enable with "EVE_GEN n"
-- added a couple of test profiles for BT817
-- moved the profile for the RiTFT50 over to the one for the RiTFT70
-- added a profile for the VM816C50A-D from Bridgetek
-- added a profile for PH800480T024-IFC03 and PH800480T013-IFC05 from PowerTip
-- added profiles for EVE4_40G and EVE4_101G from Matrix Orbital
-- added profiles for the EVE4 series modules from Riverdi
 
 */
 
@@ -133,7 +92,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 	#define EVE_PH800480
 #endif
 
-#define EVE_EVE3_50G
+#define EVE_EVE3_39G
 
 
 /* display timing parameters below */
@@ -191,6 +150,31 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define EVE_SWIZZLE	(0L)
 #define EVE_CSPREAD	(1L)
 #define EVE_TOUCH_RZTHRESH (1200L)
+#define EVE_HAS_CRYSTAL
+#define EVE_GEN 3
+#define EVE_HAS_GT911	/* special treatment required for out-of-spec touch-controller */
+#endif
+
+
+/* EVE3-39G 480x128 3.9" Matrix Orbital, capacitive-touch, BT815 */
+#if defined (EVE_EVE3_39G)
+#define EVE_HSIZE	(480L)	/* Thd Length of visible part of line (in PCLKs) - display width */
+#define EVE_VSIZE	(128L)	/* Tvd Number of visible lines (in lines) - display height */
+
+#define EVE_VSYNC0	(8L)	/* Tvf Vertical Front Porch */
+#define EVE_VSYNC1	(11L)	/* Tvf + Tvp Vertical Front Porch plus Vsync Pulse width */
+#define EVE_VOFFSET	(11L)	/* Tvf + Tvp + Tvb Number of non-visible lines (in lines) */
+#define EVE_VCYCLE	(288L)	/* Tv Total number of lines (visible and non-visible) (in lines) */
+#define EVE_HSYNC0	(28L)	 /* (40L)	// Thf Horizontal Front Porch */
+#define EVE_HSYNC1	(44L)	/* Thf + Thp Horizontal Front Porch plus Hsync Pulse width */
+#define EVE_HOFFSET	(44L)	/* Thf + Thp + Thb Length of non-visible part of line (in PCLK cycles) */
+#define EVE_HCYCLE 	(524L)	/* Th Total length of line (visible and non-visible) (in PCLKs) */
+
+#define EVE_PCLK	(5L)
+#define EVE_PCLKPOL	(1L)
+#define EVE_SWIZZLE	(0L)
+#define EVE_CSPREAD	(1L)
+#define EVE_TOUCH_RZTHRESH (3200L)
 #define EVE_HAS_CRYSTAL
 #define EVE_GEN 3
 #define EVE_HAS_GT911	/* special treatment required for out-of-spec touch-controller */
