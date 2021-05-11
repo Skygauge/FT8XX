@@ -582,7 +582,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define MACRO(m) ((37UL<<24)|(((m)&1UL)<<0))
 //#define NOP() ((45UL<<24))
 #define PALETTE_SOURCE(addr) ((42UL<<24)|(((addr)&4194303UL)<<0))
-#define POINT_SIZE(size) ((13UL<<24)|(((size)&8191UL)<<0))
+#define POINT_SIZE(size) ((13UL<<24)|(((uint16_t)(size)&8191UL)<<0))
 #define RESTORE_CONTEXT() ((35UL<<24))
 #define RETURN() ((36UL<<24))
 #define SAVE_CONTEXT() ((34UL<<24))
@@ -593,12 +593,13 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define STENCIL_OP(sfail,spass) ((12UL<<24)|(((sfail)&7UL)<<3)|(((spass)&7UL)<<0))
 #define TAG(s) ((3UL<<24)|(((s)&255UL)<<0))
 #define TAG_MASK(mask) ((20UL<<24)|(((mask)&1UL)<<0))
-#define VERTEX2F(x,y) ((1UL<<30)|(((x)&32767UL)<<15)|(((y)&32767UL)<<0))
+#define VERTEX2F(x,y) ((1UL<<30)|((((int16_t)(x)))<<15)|(((int16_t)(y))&0x3FFF)|(((int16_t)(y))&0x8000>>1)|(((int16_t)(x))&0x8000<<14))
 #define VERTEX2II(x,y,handle,cell) ((2UL<<30)|(((x)&511UL)<<21)|(((y)&511UL)<<12)|(((handle)&31UL)<<7)|(((cell)&127UL)<<0))
 #define VERTEX_FORMAT(frac) ((39UL<<24)|(((frac)&7UL)<<0))
 #define VERTEX_TRANSLATE_X(x) ((43UL<<24)|(((x)&131071UL)<<0))
 #define VERTEX_TRANSLATE_Y(y) ((44UL<<24)|(((y)&131071UL)<<0))
 
+#define V2F(x, y) ((1UL<<30) | (((int16_t)(max(x, 0.0f)))<<15) | ((int16_t)(max(y, 0.0f))))
 
 /* EVE Generation 3: BT815 / BT816 definitions -----------------*/
 #if EVE_GEN > 2

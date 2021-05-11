@@ -103,7 +103,8 @@ namespace EVE
 
 		void transmit(const uint8_t * data, uint len)
 		{
-			SPI.transfer((uint8_t*)data, len);
+			for(uint i = 0 ; i < len; i++) SPI.transfer(data[i]);
+			//SPI.transfer(data, len);
 		}
 
 		void transmit_32(uint32_t data)

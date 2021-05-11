@@ -154,6 +154,7 @@ namespace EVE
 
 		if((space & 0x3) != 0) /* we have a co-processor fault, make EVE play with us again */
 		{
+			Serial.println("!!! FAULT !!!");
 			#if EVE_GEN > 2
 			uint16_t copro_patch_pointer;
 			uint32_t ftAddress;
@@ -759,26 +760,19 @@ namespace EVE
 
 	/* this is meant to be called outside display-list building, it includes executing the command and waiting for completion, does not support cmd-burst */
 	/* this is a pointless command, just use one of the memWrite* helper functions instead to directly write to EVEs memory */
-	/*
-	void Display::cmd_memwrite(uint32_t dest, uint32_t num, const uint8_t *data)
+	
+	void Display::cmd_memwrite(uint32_t dest, const uint8_t *data, uint32_t num)
 	{
 		begin_cmd(CMD_MEMWRITE);
 		port.transmit_32(dest);
 		port.transmit_32(num);
 
-		num = (num + 3)&(~3);
-
-		for(count=0;count<len;count++)
-		{
-			port.transmit(pgm_read_byte_far(data+count));
-		}
+		private_block_write(data, num);
 
 		port.cs_clear();
 		while (busy());
 	}
-	*/
-
-
+	
 	/* this is meant to be called outside display-list building, it includes executing the command and waiting for completion, does not support cmd-burst */
 	void Display::cmd_memzero(uint32_t ptr, uint32_t num)
 	{
@@ -1102,10 +1096,11 @@ namespace EVE
 			DELAY_MS(1); /* wait more than 100�s */
 			memWrite8(REG_CPURESET, 0x00); /* clear all resets */
 			DELAY_MS(110); /* wait more than 55ms - does not work with multitouch, for some reason a minimum delay of 108ms is required */
-			memWrite16(REG_GPIOX_DIR,0x8000); /* setting GPIO3 back to input */
 		#endif
 		#endif
 		
+        memWrite16(REG_GPIOX, 0x800C);
+		memWrite16(REG_GPIOX_DIR,0x800C); /* setting GPIO3 back to input, GPIO2 to output */
 		/*	memWrite8(REG_PCLK, 0x00);	*/	/* set PCLK to zero - don't clock the LCD until later, line disabled because zero is reset-default and we just did a reset */
 
 		#if defined (EVE_ADAM101)
@@ -1136,9 +1131,9 @@ namespace EVE
 		memWrite16(REG_TOUCH_RZTHRESH, EVE_TOUCH_RZTHRESH);	/* eliminate any false touches */
 
 		/* disable Audio for now */
-		memWrite8(REG_VOL_PB, 0x00); /* turn recorded audio volume down */
-		memWrite8(REG_VOL_SOUND, 0x00); /* turn synthesizer volume off */
-		memWrite16(REG_SOUND, 0x6000); /* set synthesizer to mute */
+		//memWrite8(REG_VOL_PB, 0xFF); /* turn recorded audio volume down */
+		//memWrite8(REG_VOL_SOUND, 0xFF); /* turn synthesizer volume off */
+		//memWrite16(REG_SOUND, 0x6000); /* set synthesizer to mute */
 
 		/* write a basic display-list to get things started */
 		memWrite32(EVE_RAM_DL, DL_CLEAR_RGB);

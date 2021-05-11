@@ -59,6 +59,7 @@ namespace EVE
 	void memWrite32(uint32_t ftAddress, uint32_t ftData32);
 	void memWrite_flash_buffer(uint32_t ftAddress, const uint8_t *data, uint32_t len);
 	void memWrite_sram_buffer(uint32_t ftAddress, const uint8_t *data, uint32_t len);
+	void cmd_memwrite(uint32_t dest, const uint8_t *data, uint32_t num);
 	uint8_t  busy(void);
 	void cmd_start(void);
 	void cmd_execute(void);
