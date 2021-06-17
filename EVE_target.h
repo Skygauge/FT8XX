@@ -61,7 +61,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #include <SPI.h>
 
 #define EVE_CS 		10
-#define EVE_PDN		15
+#define EVE_PDN		6
 #define EVE_DMA
 #define DELAY_MS(ms) delay(ms)
 
