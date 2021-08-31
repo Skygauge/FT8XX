@@ -41,8 +41,8 @@ namespace EVE
 	void private_block_write(const uint8_t *data, uint16_t len);
 
 	public:
+	Display(uint8_t cs, uint8_t reset) : port(cs, reset) {};
 	Port port;
-	Display(){};
 	
 	volatile uint8_t cmd_burst = 0; /* flag to indicate cmd-burst is active */
 	/*----------------------------------------------------------------------------------------------------------------------------*/

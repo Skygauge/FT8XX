@@ -8,11 +8,11 @@ namespace EVE
 		((Port*)(event_responder.getContext()))->dma_done();
 	}
 
-	Port::Port()
-	{
-		spi_event.setContext(this);
-		spi_event.attachImmediate(dma_callback);
-	}
+	Port::Port(uint8_t CS, uint8_t RESET) : cs(CS), reset(RESET)
+    {
+        spi_event.setContext(this);
+        spi_event.attachImmediate(dma_callback);
+    };
 
 	void Port::dma_done(void)
 	{

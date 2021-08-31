@@ -1011,6 +1011,8 @@ namespace EVE
 	/* init, has to be executed with the SPI setup to 11 MHz or less as required by FT8xx / BT8xx */
 	uint8_t Display::init(void)
 	{
+        port.init();
+
 		uint8_t chipid = 0;
 		uint16_t timeout = 0;
 

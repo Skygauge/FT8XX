@@ -60,8 +60,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #include <stdio.h>
 #include <SPI.h>
 
-#define EVE_CS 		10
-#define EVE_PDN		6
 #define EVE_DMA
 #define DELAY_MS(ms) delay(ms)
 
@@ -72,7 +70,17 @@ namespace EVE
 	public:
 		void dma_done();
 
-		Port();
+        const uint8_t cs, reset;
+
+		Port(uint8_t CS, uint8_t RESET);
+
+        void init()
+        {
+            pinMode(cs, OUTPUT);
+		    cs_clear();
+            pinMode(reset, OUTPUT);
+            pdn_clear();
+        }
 
 		EventResponder spi_event;
 		uint32_t buffer[1025];
@@ -83,12 +91,12 @@ namespace EVE
 
 		void cs_set(void)
 		{
-			digitalWriteFast(EVE_CS, LOW); /* make EVE listen */
+			digitalWriteFast(cs, LOW); /* make EVE listen */
 		}
 
 		void cs_clear(void)
 		{
-			digitalWriteFast(EVE_CS, HIGH); /* tell EVE to stop listen */
+			digitalWriteFast(cs, HIGH); /* tell EVE to stop listen */
 		}
 
 		void transmit(uint8_t data)
@@ -128,12 +136,12 @@ namespace EVE
 
 		void pdn_set(void)
 		{
-			digitalWriteFast(EVE_PDN, LOW); /* go into power-down */
+			digitalWriteFast(reset, HIGH); /* go into power-down */
 		}
 
 		void pdn_clear(void)
 		{
-			digitalWriteFast(EVE_PDN, HIGH); /* power up */
+			digitalWriteFast(reset, LOW); /* power up */
 		}
 	};
 };
