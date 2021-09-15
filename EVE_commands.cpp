@@ -1052,7 +1052,8 @@ namespace EVE
 			timeout++;
 			if(timeout > 400)
 			{
-				return 0;
+                Serial.println("display init timeout on id!");
+            	return 0;
 			}
 		}
 
@@ -1063,6 +1064,7 @@ namespace EVE
 			timeout++;
 			if(timeout > 50) /* experimental, 10 was the lowest value to get the BT815 started with, the touch-controller was the last to get out of reset */
 			{
+                Serial.println("display init timeout on reset!");
 				return 0;
 			}
 		}
@@ -1166,6 +1168,7 @@ namespace EVE
 			timeout++;
 			if(timeout > 4)
 			{
+                Serial.println("display init timeout on clocking!");
 				break; /* something is wrong here, but since we made it this far through the init, just leave the loop */
 			}
 		}

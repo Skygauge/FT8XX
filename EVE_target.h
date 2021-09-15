@@ -136,12 +136,12 @@ namespace EVE
 
 		void pdn_set(void)
 		{
-			digitalWriteFast(reset, HIGH); /* go into power-down */
+			digitalWriteFast(reset, LOW); /* go into power-down */
 		}
 
 		void pdn_clear(void)
 		{
-			digitalWriteFast(reset, LOW); /* power up */
+			digitalWriteFast(reset, HIGH); /* power up */
 		}
 	};
 };
