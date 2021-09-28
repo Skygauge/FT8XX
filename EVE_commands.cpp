@@ -1013,16 +1013,6 @@ namespace EVE
 	{
         port.init();
 
-		uint8_t chipid = 0;
-		uint16_t timeout = 0;
-
-		port.pdn_set();
-		DELAY_MS(6); /* minimum time for power-down is 5ms */
-		port.pdn_clear();
-		DELAY_MS(21); /* minimum time to allow from rising PD_N to first access is 20ms */
-
-	/*	cmdWrite(EVE_CORERST,0); */ /* reset, only required for warm-start if PowerDown line is not used */
-
 		#if defined (EVE_HAS_CRYSTAL)
 		cmdWrite(EVE_CLKEXT,0);	/* setup EVE for external clock */
 		#else
@@ -1035,15 +1025,8 @@ namespace EVE
 
 		cmdWrite(EVE_ACTIVE,0);	/* start EVE */
 
-		/* BRT AN033 BT81X_Series_Programming_Guide V1.2 had a small change to chapter 2.4 "Initialization Sequence during Boot Up" */
-		/* Send Host command �ACTIVE� and wait for at least 300 milliseconds. */
-		/* Ensure that there is no SPI access during this time. */
-		/* I asked Bridgetek for clarification why this has been made stricter. */
-		/* From observation with quite a few of different displays I do not agree that either the 300ms are necessary or that */
-		/* *reading* the SPI while EVE inits itself is causing any issues. */
-		/* But since BT815 at 72MHz need 42ms anyways before they start to answer, here is my compromise, a fixed 40ms delay */
-		/* to provide at least a short moment of silence for EVE */
-		DELAY_MS(40);
+		uint8_t chipid = memRead8(REG_ID);;
+		uint16_t timeout = 0;
 
 		while(chipid != 0x7C) /* if chipid is not 0x7c, continue to read it until it is, EVE needs a moment for it's power on self-test and configuration */
 		{
@@ -1157,22 +1140,7 @@ namespace EVE
 		}
 		#endif
 		#endif
-
-		memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
-		memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
-
-		timeout = 0;
-		while(busy() == 1) /* just to be safe, should not even enter the loop */
-		{
-			DELAY_MS(1);
-			timeout++;
-			if(timeout > 4)
-			{
-                Serial.println("display init timeout on clocking!");
-				break; /* something is wrong here, but since we made it this far through the init, just leave the loop */
-			}
-		}
-
+        
 		/* send pre-recorded touch calibration values, depending on the display the code is compiled for */
 
 		#if defined (EVE_CFAF240400C1_030SC)
@@ -1342,6 +1310,20 @@ namespace EVE
 
 			while(1);
 		#endif
+
+		    memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
+		    memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
+
+            port.set_speed();
+
+            start_cmd_burst();                             //begin commandlist
+            cmd_dl_burst(CMD_DLSTART);                     //start displaylist
+            cmd_dl_burst(DL_CLEAR|CLR_COL|CLR_STN|CLR_TAG);//clean screen
+            cmd_dl_burst(DL_DISPLAY);                      //render display
+            cmd_dl_burst(CMD_SWAP);                        //scanout display
+            end_cmd_burst();                               //close commandlist
+
+            while(busy());
 
 			#if defined (EVE_ADAM101)
 			memWrite8(REG_PWM_DUTY, 0x00); /* turn on backlight to 25% for Glyn ADAM101 module, it uses inverted values */

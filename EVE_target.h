@@ -74,12 +74,20 @@ namespace EVE
 
 		Port(uint8_t CS, uint8_t RESET);
 
-        void init()
+        void init(int speed = 11000000)
         {
+            SPI.begin();
+            SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
             pinMode(cs, OUTPUT);
-		    cs_clear();
+		    cs_set();
             pinMode(reset, OUTPUT);
             pdn_clear();
+        }
+
+        void set_speed(int speed = 28000000)
+        {
+            SPI.endTransaction();
+            SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
         }
 
 		EventResponder spi_event;
