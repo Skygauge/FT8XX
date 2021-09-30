@@ -44,6 +44,7 @@ namespace EVE
 	public:
 	Display(uint8_t cs, uint8_t reset) : port(cs, reset) {};
 	Port port;
+    bool is_initialized();
 	
 	volatile uint8_t cmd_burst = 0; /* flag to indicate cmd-burst is active */
 	/*----------------------------------------------------------------------------------------------------------------------------*/
