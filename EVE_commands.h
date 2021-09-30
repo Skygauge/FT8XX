@@ -39,6 +39,7 @@ namespace EVE
 	void private_string_write(const char *text);
 	void block_transfer(const uint8_t *data, uint32_t len);
 	void private_block_write(const uint8_t *data, uint16_t len);
+    bool initialized = false;
 
 	public:
 	Display(uint8_t cs, uint8_t reset) : port(cs, reset) {};
@@ -123,7 +124,7 @@ namespace EVE
 	#if EVE_GEN > 2
 	uint8_t  init_flash(void);
 	#endif /* EVE_GEN > 2 */
-	uint8_t  init(void);
+	uint8_t  init(const uint * TouchCalibration);
 
 	/*----------------------------------------------------------------------------------------------------------------------------*/
 	/*-------- functions for display lists ---------------------------------------------------------------------------------------*/

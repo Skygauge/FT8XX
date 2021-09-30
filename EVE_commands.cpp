@@ -154,39 +154,8 @@ namespace EVE
 
 		if((space & 0x3) != 0) /* we have a co-processor fault, make EVE play with us again */
 		{
-			Serial.println("!!! FAULT !!!");
-			#if EVE_GEN > 2
-			uint16_t copro_patch_pointer;
-			uint32_t ftAddress;
-
-			copro_patch_pointer = memRead16(REG_COPRO_PATCH_DTR);
-			#endif
-
-			memWrite8(REG_CPURESET, 1);   /* hold co-processor engine in the reset condition */
-			memWrite16(REG_CMD_READ, 0);  /* set REG_CMD_READ to 0 */
-			memWrite16(REG_CMD_WRITE, 0); /* set REG_CMD_WRITE to 0 */
-			memWrite32(REG_CMD_DL, 0);    /* reset REG_CMD_DL to 0 as required by the BT81x programming guide, should not hurt FT8xx */
-			memWrite8(REG_CPURESET, 0);  /* set REG_CMD_WRITE to 0 to restart the co-processor engine*/
-
-			#if EVE_GEN > 2
-
-			memWrite16(REG_COPRO_PATCH_DTR, copro_patch_pointer);
-			DELAY_MS(5); /* just to be safe */
-			ftAddress = REG_CMDB_WRITE;
-
-			port.cs_set();
-			port.transmit((uint8_t)(ftAddress >> 16) | MEM_WRITE); /* send Memory Write plus high address byte */
-			port.transmit((uint8_t)(ftAddress >> 8)); /* send middle address byte */
-			port.transmit((uint8_t)(ftAddress)); /* send low address byte */
-
-			port.transmit_32(CMD_FLASHATTACH);
-			port.transmit_32(CMD_FLASHFAST);
-			port.cs_clear();
-
-			memWrite8(REG_PCLK, EVE_PCLK); /* restore REG_PCLK in case it was set to zero by an error */
-			DELAY_MS(5); /* just to be safe */
-
-			#endif
+            initialized = false;
+            port.pdn_set();
 		}
 
 		if(space != 0xffc)
@@ -921,7 +890,7 @@ namespace EVE
 		while(status == 0) /* FLASH_STATUS_INIT - we are somehow still in init, give it a litte more time, this should never happen */
 		{
 			status = memRead8(REG_FLASH_STATUS);
-			DELAY_MS(1);
+			delay(1);
 			timeout++;
 			if(timeout > 100) /* 100ms and still in init, lets call quits now and exit with an error */
 			{
@@ -1009,53 +978,49 @@ namespace EVE
 
 
 	/* init, has to be executed with the SPI setup to 11 MHz or less as required by FT8xx / BT8xx */
-	uint8_t Display::init(void)
+	uint8_t Display::init(const uint * TouchCalibration)
 	{
-        port.init();
+        if(initialized) return false;
 
+        port.init();
+        delay(3);
 		#if defined (EVE_HAS_CRYSTAL)
 		cmdWrite(EVE_CLKEXT,0);	/* setup EVE for external clock */
 		#else
 		cmdWrite(EVE_CLKINT,0);	/* setup EVE for internal clock */
 		#endif
-
 		#if EVE_GEN > 2
 		cmdWrite(EVE_CLKSEL,0x46); /* set clock to 72 MHz */
 		#endif
 
 		cmdWrite(EVE_ACTIVE,0);	/* start EVE */
 
-		uint8_t chipid = memRead8(REG_ID);;
-		uint16_t timeout = 0;
-
-		while(chipid != 0x7C) /* if chipid is not 0x7c, continue to read it until it is, EVE needs a moment for it's power on self-test and configuration */
-		{
-			DELAY_MS(1);
-			chipid = memRead8(REG_ID);
-			timeout++;
-			if(timeout > 400)
-			{
-                Serial.println("display init timeout on id!");
-            	return 0;
-			}
+        elapsedMicros timeout = 0;
+		while(memRead8(REG_ID) != 0x7C) /* if chipid is not 0x7c, continue to read it until it is, EVE needs a moment for it's power on self-test and configuration */
+		{			
+            if(timeout > 50000) {
+                Serial.printf("display init timeout on id, got %u!\r\n");
+                port.pdn_set();
+                return false;
+            }
 		}
 
-		timeout = 0;
+        timeout = 0;
 		while (0x00 != (memRead8(REG_CPURESET) & 0x03)) /* check if EVE is in working status */
 		{
-			DELAY_MS(1);
-			timeout++;
-			if(timeout > 50) /* experimental, 10 was the lowest value to get the BT815 started with, the touch-controller was the last to get out of reset */
-			{
+            if(timeout > 50000) {
                 Serial.println("display init timeout on reset!");
-				return 0;
-			}
+                port.pdn_set();
+                return false;
+            }
 		}
 
 		/* tell EVE that we changed the frequency from default to 72MHz for BT8xx */
 		#if EVE_GEN > 2
 		memWrite32(REG_FREQUENCY, 72000000);
 		#endif
+
+        port.set_speed();
 
 		/* we have a display with a Goodix GT911 / GT9271 touch-controller on it, so we patch our FT811 or FT813 according to AN_336 or setup a BT815 accordingly */
 		#if defined (EVE_HAS_GT911)
@@ -1089,13 +1054,7 @@ namespace EVE
         memWrite16(REG_GPIOX, 0x800C);
 		memWrite16(REG_GPIOX_DIR,0x800C); /* setting GPIO3 back to input, GPIO2 to output */
 		/*	memWrite8(REG_PCLK, 0x00);	*/	/* set PCLK to zero - don't clock the LCD until later, line disabled because zero is reset-default and we just did a reset */
-
-		#if defined (EVE_ADAM101)
-		memWrite8(REG_PWM_DUTY, 0x80); /* turn off backlight for Glyn ADAM101 module, it uses inverted values */
-		#else
-		memWrite8(REG_PWM_DUTY, 0); /* turn off backlight for any other module */
-		#endif
-
+		
 		/* Initialize Display */
 		memWrite16(REG_HSIZE,   EVE_HSIZE);   /* active display width */
 		memWrite16(REG_HCYCLE,  EVE_HCYCLE);  /* total number of clocks per line, incl front/back porch */
@@ -1110,8 +1069,6 @@ namespace EVE
 		memWrite8(REG_SWIZZLE,  EVE_SWIZZLE); /* FT8xx output to LCD - pin order */
 		memWrite8(REG_PCLK_POL, EVE_PCLKPOL); /* LCD data is clocked in on this PCLK edge */
 		memWrite8(REG_CSPREAD,	EVE_CSPREAD); /* helps with noise, when set to 1 fewer signals are changed simultaneously, reset-default: 1 */
-
-		/* do not set PCLK yet - wait for just after the first display list */
 
 		/* configure Touch */
 		memWrite8(REG_TOUCH_MODE, EVE_TMODE_CONTINUOUS); /* enable touch */
@@ -1129,7 +1086,6 @@ namespace EVE
 		memWrite32(REG_DLSWAP, EVE_DLSWAP_FRAME);
 
 		/* nothing is being displayed yet... the pixel clock is still 0x00 */
-
 		#if EVE_GEN > 3
 		#if defined (EVE_PCLK_FREQ)
 		uint32_t frequency;
@@ -1140,197 +1096,20 @@ namespace EVE
 		}
 		#endif
 		#endif
+
+        memWrite32(REG_TOUCH_TRANSFORM_A, TouchCalibration[0]);
+        memWrite32(REG_TOUCH_TRANSFORM_B, TouchCalibration[1]);
+        memWrite32(REG_TOUCH_TRANSFORM_C, TouchCalibration[2]);
+        memWrite32(REG_TOUCH_TRANSFORM_D, TouchCalibration[3]);
+        memWrite32(REG_TOUCH_TRANSFORM_E, TouchCalibration[4]);
+        memWrite32(REG_TOUCH_TRANSFORM_F, TouchCalibration[5]);
+
+        memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
+        memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
         
-		/* send pre-recorded touch calibration values, depending on the display the code is compiled for */
+        initialized = true;
 
-		#if defined (EVE_CFAF240400C1_030SC)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x0000ed11);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x00001139);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfff76809);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x00000000);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x00010690);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xfffadf2e);
-		#elif defined (EVE_CFAF320240F_035T)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x00005614);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x0000009e);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfff43422);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x0000001d);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0xffffbda4);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x00f8f2ef);
-		#elif defined (EVE_CFAF480128A0_039TC)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x00010485);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x0000017f);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfffb0bd3);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x00000073);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0000e293);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x00069904);
-		#elif defined (EVE_CFAF800480E0_050SC)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000107f9);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0xffffff8c);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfff451ae);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x000000d2);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0000feac);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xfffcfaaf);
-		#elif defined (EVE_PAF90)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x00000159);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x0001019c);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfff93625);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x00010157);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x00000000);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x0000c101);
-		#elif defined (EVE_RiTFT43)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000062cd);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0xfffffe45);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfff45e0a);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x000001a3);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x00005b33);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xFFFbb870);
-		#elif defined (EVE_EVE2_38)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x00007bed);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x000001b0);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfff60aa5);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x00000095);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0xffffdcda);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x00829c08);
-		#elif defined (EVE_EVE2_35G) ||  defined (EVE_EVE3_35G)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000109E4);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x000007A6);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xFFEC1EBA);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x0000072C);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0001096A);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xFFF469CF);
-		#elif defined (EVE_EVE2_43G) ||  defined (EVE_EVE3_43G)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x0000a1ff);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x00000680);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xffe54cc2);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0xffffff53);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0000912c);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xfffe628d);
-		#elif defined (EVE_EVE2_50G) || defined (EVE_EVE3_50G)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000109E4);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x000007A6);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xFFEC1EBA);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x0000072C);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0001096A);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xFFF469CF);
-		#elif defined (EVE_EVE2_70G)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000105BC);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0xFFFFFA8A);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0x00004670);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0xFFFFFF75);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x00010074);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xFFFF14C8);
-		#elif defined (EVE_NHD_35)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x0000f78b);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x00000427);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfffcedf8);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0xfffffba4);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0000f756);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x0009279e);
-		#elif defined (EVE_RVT70)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000074df);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x000000e6);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xfffd5474);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0x000001af);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x00007e79);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0xffe9a63c);
-		#elif defined (EVE_FT811CB_HY50HD)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 66353);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 712);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 4293876677);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 4294966157);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 67516);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 418276);
-		#elif defined (EVE_ADAM101)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x000101E3);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0x00000114);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0xFFF5EEBA);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0xFFFFFF5E);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x00010226);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x0000C783);
-		#elif defined (EVE_EVE3_39G)
-			memWrite32(REG_TOUCH_TRANSFORM_A, 0x00010668);
-			memWrite32(REG_TOUCH_TRANSFORM_B, 0xFFFFF9DD);
-			memWrite32(REG_TOUCH_TRANSFORM_C, 0x000A43EF);
-			memWrite32(REG_TOUCH_TRANSFORM_D, 0xFFFFFF3A);
-			memWrite32(REG_TOUCH_TRANSFORM_E, 0x0000E691);
-			memWrite32(REG_TOUCH_TRANSFORM_F, 0x0004E824);
-
-		/* activate this if you are using a module for the first time or if you need to re-calibrate it */
-		/* write down the numbers on the screen and either place them in one of the pre-defined blocks above or make a new block */
-		#else
-		
-			#if defined (EVE_ADAM101)
-			memWrite8(REG_PWM_DUTY, 0x00); /* turn on backlight to 25% for Glyn ADAM101 module, it uses inverted values */
-			#else
-			memWrite8(REG_PWM_DUTY, 0xFF); /* turn on backlight to 25% for any other module */
-			#endif
-			/* calibrate touch and displays values to screen */
-			cmd_dl(CMD_DLSTART);
-			cmd_dl(DL_CLEAR_RGB);
-			cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
-			cmd_text((EVE_HSIZE/2), 50, 26, EVE_OPT_CENTER, "Please tap on the dot.");
-			cmd_calibrate();
-			cmd_dl(DL_DISPLAY);
-			cmd_dl(CMD_SWAP);
-			cmd_execute();
-
-			uint32_t touch_a, touch_b, touch_c, touch_d, touch_e, touch_f;
-
-			touch_a = memRead32(REG_TOUCH_TRANSFORM_A);
-			touch_b = memRead32(REG_TOUCH_TRANSFORM_B);
-			touch_c = memRead32(REG_TOUCH_TRANSFORM_C);
-			touch_d = memRead32(REG_TOUCH_TRANSFORM_D);
-			touch_e = memRead32(REG_TOUCH_TRANSFORM_E);
-			touch_f = memRead32(REG_TOUCH_TRANSFORM_F);
-
-			cmd_dl(CMD_DLSTART);
-			cmd_dl(DL_CLEAR_RGB);
-			cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
-			cmd_dl(TAG(0));
-
-			cmd_text(5, 15, 26, 0, "TOUCH_TRANSFORM_A:");
-			cmd_text(5, 30, 26, 0, "TOUCH_TRANSFORM_B:");
-			cmd_text(5, 45, 26, 0, "TOUCH_TRANSFORM_C:");
-			cmd_text(5, 60, 26, 0, "TOUCH_TRANSFORM_D:");
-			cmd_text(5, 75, 26, 0, "TOUCH_TRANSFORM_E:");
-			cmd_text(5, 90, 26, 0, "TOUCH_TRANSFORM_F:");
-
-			cmd_setbase(16L);
-			cmd_number(310, 15, 26, EVE_OPT_RIGHTX|8, touch_a);
-			cmd_number(310, 30, 26, EVE_OPT_RIGHTX|8, touch_b);
-			cmd_number(310, 45, 26, EVE_OPT_RIGHTX|8, touch_c);
-			cmd_number(310, 60, 26, EVE_OPT_RIGHTX|8, touch_d);
-			cmd_number(310, 75, 26, EVE_OPT_RIGHTX|8, touch_e);
-			cmd_number(310, 90, 26, EVE_OPT_RIGHTX|8, touch_f);
-
-			cmd_dl(DL_DISPLAY);	/* instruct the graphics processor to show the list */
-			cmd_dl(CMD_SWAP); /* make this list active */
-			cmd_execute();
-
-			while(1);
-		#endif
-
-		    memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
-		    memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
-
-            port.set_speed();
-
-            start_cmd_burst();                             //begin commandlist
-            cmd_dl_burst(CMD_DLSTART);                     //start displaylist
-            cmd_dl_burst(DL_CLEAR|CLR_COL|CLR_STN|CLR_TAG);//clean screen
-            cmd_dl_burst(DL_DISPLAY);                      //render display
-            cmd_dl_burst(CMD_SWAP);                        //scanout display
-            end_cmd_burst();                               //close commandlist
-
-            while(busy());
-
-			#if defined (EVE_ADAM101)
-			memWrite8(REG_PWM_DUTY, 0x00); /* turn on backlight to 25% for Glyn ADAM101 module, it uses inverted values */
-			#else
-			memWrite8(REG_PWM_DUTY, 0xFF); /* turn on backlight to 25% for any other module */
-			#endif
-		return 1;
+		return initialized;
 	}
 
 

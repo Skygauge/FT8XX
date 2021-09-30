@@ -54,6 +54,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 	#define EVE_EVE2_35G
 	#define EVE_EVE2_38
 	#define EVE_EVE2_38G
+    #define EVE_EVE3_39G
 	#define EVE_EVE2_43
 	#define EVE_EVE2_43G
 	#define EVE_EVE2_50
@@ -92,7 +93,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 	#define EVE_PH800480
 #endif
 
-#define EVE_EVE3_39G
+#define EVE_EVE3_43G
 
 
 /* display timing parameters below */
@@ -304,7 +305,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #if defined (EVE_EVE3_43G)
 #define Resolution_480x272
 
-#define EVE_PCLK	(7L)
+#define EVE_PCLK	(5L)
 #define EVE_PCLKPOL	(1L)
 #define EVE_SWIZZLE	(0L)
 #define EVE_CSPREAD	(1L)

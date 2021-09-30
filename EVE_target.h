@@ -59,9 +59,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #include <Arduino.h>
 #include <stdio.h>
 #include <SPI.h>
-
 #define EVE_DMA
-#define DELAY_MS(ms) delay(ms)
 
 namespace EVE
 {
@@ -79,12 +77,15 @@ namespace EVE
             SPI.begin();
             SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
             pinMode(cs, OUTPUT);
-		    cs_set();
             pinMode(reset, OUTPUT);
+		    cs_clear();
+            pdn_set();
+            delay(1);
             pdn_clear();
+            cs_set();
         }
 
-        void set_speed(int speed = 28000000)
+        void set_speed(int speed = 22000000)
         {
             SPI.endTransaction();
             SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
