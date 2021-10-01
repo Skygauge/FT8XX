@@ -1,8 +1,6 @@
 #include "EVE_commands.h"
 
-#if EVE_GEN > 2
 #include <stdarg.h>
-#endif
 
 /* EVE Memory Commands - used with memWritexx and memReadxx */
 #define MEM_WRITE	0x80 /* EVE Host Memory Write */
@@ -395,7 +393,6 @@ namespace EVE
 
 
 	/* BT815 / BT816 */
-	#if EVE_GEN > 2
 
 	/* this is meant to be called outside display-list building, it includes executing the command and waiting for completion, does not support cmd-burst */
 	/* this command clears the graphics systems flash cache and to do so it needs to be executed with empty display lists */
@@ -575,8 +572,6 @@ namespace EVE
 		}
 	}
 
-	#endif /* EVE_GEN > 2 */
-
 
 	/* this is meant to be called outside display-list building, it includes executing the command and waiting for completion, does not support cmd-burst */
 	/* get the properties of an image after a CMD_LOADIMAGE operation and write the values to the variables that are supplied by pointers
@@ -661,11 +656,7 @@ namespace EVE
 		port.transmit_32(options);
 		port.cs_clear();
 
-	#if EVE_GEN > 2
 		if( ((options & EVE_OPT_MEDIAFIFO) == 0) && ((options & EVE_OPT_FLASH) == 0) )/* direct data, neither by Media-FIFO or from Flash */
-	#else
-		if((options & EVE_OPT_MEDIAFIFO) == 0) /* direct data, not by Media-FIFO */
-	#endif
 		{
 			if(len)
 			{
@@ -761,11 +752,7 @@ namespace EVE
 		port.transmit_32(options);
 		port.cs_clear();
 
-		#if EVE_GEN > 2
 		if( ((options & EVE_OPT_MEDIAFIFO) == 0) && ((options & EVE_OPT_FLASH) == 0) )/* direct data, neither by Media-FIFO or from Flash */
-		#else
-		if((options & EVE_OPT_MEDIAFIFO) == 0) /* direct data, not by Media-FIFO */
-		#endif
 		{
 			if(data)
 			{
@@ -877,8 +864,6 @@ namespace EVE
 	/*------------- patching and initialisation ----------------------------------------------------------------------------------*/
 	/*----------------------------------------------------------------------------------------------------------------------------*/
 
-	#if EVE_GEN > 2
-
 	/* switch the FLASH attached to a BT815/BT816 to full-speed mode, returns 0 for failing to do so */
 	uint8_t Display::init_flash(void)
 	{
@@ -933,48 +918,6 @@ namespace EVE
 		return 0;
 	}
 
-	#endif /* EVE_GEN > 2 */
-
-
-	/* FT811 / FT813 binary-blob from FTDIs AN_336 to patch the touch-engine for Goodix GT911 / GT9271 touch controllers */
-	#if defined (EVE_HAS_GT911) && (EVE_GEN < 3)
-
-	#if	defined (__AVR__)
-	#include <avr/pgmspace.h>
-	#else
-	#define PROGMEM
-	#endif
-
-	const uint16_t Display::GT911_len = 1184;
-	const uint8_t Display::GT911_data[1184] PROGMEM =
-	{
-		26,255,255,255,32,32,48,0,4,0,0,0,2,0,0,0,
-		34,255,255,255,0,176,48,0,120,218,237,84,221,111,84,69,20,63,51,179,93,160,148,101,111,76,5,44,141,123,111,161,11,219,154,16,9,16,17,229,156,75,26,11,13,21,227,3,16,252,184,179,
-		45,219,143,45,41,125,144,72,67,100,150,71,189,113,18,36,17,165,100,165,198,16,32,17,149,196,240,128,161,16,164,38,54,240,0,209,72,130,15,38,125,48,66,82,30,76,19,31,172,103,46,
-		139,24,255,4,227,157,204,156,51,115,102,206,231,239,220,5,170,94,129,137,75,194,216,98,94,103,117,115,121,76,131,177,125,89,125,82,123,60,243,58,142,242,204,185,243,188,118,156,
-		227,155,203,238,238,195,251,205,229,71,92,28,169,190,184,84,143,113,137,53,244,103,181,237,87,253,113,137,233,48,12,198,165,181,104,139,25,84,253,155,114,74,191,0,54,138,163,
-		12,62,131,207,129,23,217,34,91,31,128,65,246,163,175,213,8,147,213,107,35,203,94,108,3,111,40,171,83,24,15,165,177,222,116,97,23,188,140,206,150,42,102,181,87,78,86,182,170,134,
-		215,241,121,26,243,252,2,76,115,217,139,222,206,173,136,132,81,61,35,185,39,113,23,46,199,76,178,54,151,183,224,0,40,189,28,149,182,58,131,79,152,30,76,34,98,234,162,216,133,141,
-		102,39,170,40,192,101,53,201,146,191,37,77,44,177,209,74,211,5,206,187,5,6,216,47,53,96,123,22,50,103,251,192,84,17,74,227,185,56,106,51,91,161,96,182,163,48,171,141,139,65,152,
-		66,66,11,102,43,158,75,36,80,147,184,147,139,112,17,235,216,103,111,239,245,92,10,175,194,40,44,58,125,5,59,112,50,103,245,4,78,192,5,156,194,51,60,191,134,75,110,173,237,46,192,
-		121,156,192,115,184,218,120,67,63,115,46,11,102,10,97,232,50,235,114,182,148,118,178,41,188,12,135,77,202,124,12,96,238,35,161,234,189,129,23,249,212,139,230,25,53,48,205,52,93,
-		163,117,53,154,170,81,85,163,178,70,69,66,167,241,14,46,241,1,226,136,152,179,197,59,184,148,254,49,132,48,15,176,137,192,76,131,196,105,104,162,86,81,160,165,255,26,173,162,137,
-		86,145,210,183,192,55,175,194,211,60,91,120,230,184,174,27,41,131,155,40,224,29,87,179,232,16,55,55,7,165,147,81,23,165,49,101,54,224,75,180,81,108,18,29,226,69,225,110,175,224,
-		42,212,25,47,130,193,110,234,192,215,252,56,74,162,24,46,251,174,54,106,68,245,14,9,155,160,22,120,207,104,240,29,90,178,140,28,24,220,47,166,112,61,251,208,192,111,56,239,238,
-		93,255,251,62,99,32,193,75,61,190,235,123,229,110,218,194,85,79,225,59,98,20,238,227,235,220,11,221,149,25,180,116,194,159,111,96,192,24,213,59,139,179,156,215,69,230,19,24,35,
-		135,117,206,171,206,162,67,129,234,61,235,11,104,103,84,64,223,167,254,40,163,101,92,84,43,150,46,249,219,205,7,116,11,91,104,61,57,75,223,8,48,25,28,119,252,222,113,49,86,249,
-		74,180,211,156,181,61,215,168,157,7,251,199,150,242,250,91,58,132,94,121,7,53,151,139,98,6,165,153,69,214,32,110,211,100,101,31,89,45,81,98,23,205,205,197,209,109,186,198,35,
-		141,191,249,25,60,132,223,153,251,98,20,239,146,139,20,217,250,41,250,137,58,177,90,57,79,51,108,233,20,253,194,187,49,222,205,114,141,96,48,175,219,107,54,111,138,22,154,103,
-		108,79,58,252,179,178,79,164,195,2,153,36,39,170,199,201,167,197,85,106,8,59,177,81,46,56,2,230,75,114,17,55,112,188,65,208,137,77,114,10,115,55,58,208,197,173,122,87,6,140,
-		110,42,208,124,163,70,108,241,104,18,245,98,214,187,134,53,42,221,22,182,133,211,116,148,177,194,209,192,85,90,199,58,55,203,2,229,19,137,187,161,228,154,112,203,145,125,244,
-		188,220,118,228,41,201,181,41,195,144,215,183,51,80,250,21,217,16,217,200,235,109,227,188,122,218,142,60,170,224,112,240,184,130,229,224,113,5,223,148,163,80,165,183,130,187,
-		132,116,64,238,161,85,220,115,139,205,98,227,244,29,102,125,7,37,243,123,223,11,26,92,63,243,116,61,191,138,123,244,160,84,186,74,31,5,174,247,119,135,199,248,253,135,242,97,
-		102,145,190,144,14,85,238,221,231,193,158,48,205,25,120,248,15,220,29,158,9,70,185,30,103,229,33,254,23,237,160,172,62,193,90,222,224,232,14,200,56,90,104,142,227,120,110,6,
-		21,211,203,65,150,99,151,220,247,87,164,50,159,49,239,234,58,142,0,109,108,123,18,79,227,36,100,248,222,205,96,127,120,26,171,228,69,63,36,17,252,200,17,116,242,187,227,88,143,
-		247,2,75,191,6,130,59,188,11,55,240,31,243,122,152,226,183,207,154,73,188,39,219,43,105,222,87,41,143,141,140,175,73,112,184,252,61,184,16,90,250,35,168,82,119,176,57,116,94,
-		200,150,22,190,179,44,104,12,235,84,149,102,252,89,154,193,99,228,106,242,125,248,64,194,255,223,127,242,83,11,255,2,70,214,226,128,0,0
-	};
-	#endif
 
     bool Display::is_initialized()
     {
@@ -993,9 +936,7 @@ namespace EVE
 		#else
 		cmdWrite(EVE_CLKINT,0);	/* setup EVE for internal clock */
 		#endif
-		#if EVE_GEN > 2
 		cmdWrite(EVE_CLKSEL,0x46); /* set clock to 72 MHz */
-		#endif
 
 		cmdWrite(EVE_ACTIVE,0);	/* start EVE */
 
@@ -1020,44 +961,17 @@ namespace EVE
 		}
 
 		/* tell EVE that we changed the frequency from default to 72MHz for BT8xx */
-		#if EVE_GEN > 2
 		memWrite32(REG_FREQUENCY, 72000000);
-		#endif
-
+		
         port.set_speed();
 
 		/* we have a display with a Goodix GT911 / GT9271 touch-controller on it, so we patch our FT811 or FT813 according to AN_336 or setup a BT815 accordingly */
-		#if defined (EVE_HAS_GT911)
-
-		#if EVE_GEN > 2
-			memWrite16(REG_TOUCH_CONFIG, 0x05d0); /* switch to Goodix touch controller */
-		#else
-			uint32_t ftAddress;
-
-			ftAddress = REG_CMDB_WRITE;
-
-			port.cs_set();
-			port.transmit((uint8_t)(ftAddress >> 16) | MEM_WRITE); /* send Memory Write plus high address byte */
-			port.transmit((uint8_t)(ftAddress >> 8)); /* send middle address byte */
-			port.transmit((uint8_t)(ftAddress)); /* send low address byte */
-			private_block_write(EVE_GT911_data, EVE_GT911_len);
-			port.cs_clear();
-			while (busy());
-
-			memWrite8(REG_TOUCH_OVERSAMPLE, 0x0f); /* setup oversample to 0x0f as "hidden" in binary-blob for AN_336 */
-			memWrite16(REG_TOUCH_CONFIG, 0x05D0); /* write magic cookie as requested by AN_336 */
-
-			/* specific to the EVE2 modules from Matrix-Orbital we have to use GPIO3 to reset GT911 */
-			memWrite16(REG_GPIOX_DIR,0x8008); /* Reset-Value is 0x8000, adding 0x08 sets GPIO3 to output, default-value for REG_GPIOX is 0x8000 -> Low output on GPIO3 */
-			DELAY_MS(1); /* wait more than 100�s */
-			memWrite8(REG_CPURESET, 0x00); /* clear all resets */
-			DELAY_MS(110); /* wait more than 55ms - does not work with multitouch, for some reason a minimum delay of 108ms is required */
-		#endif
+		#if defined (EVE_HAS_GT911)		
+        memWrite16(REG_TOUCH_CONFIG, 0x05d0); /* switch to Goodix touch controller */		
 		#endif
 		
         memWrite16(REG_GPIOX, 0x800C);
 		memWrite16(REG_GPIOX_DIR,0x800C); /* setting GPIO3 back to input, GPIO2 to output */
-		/*	memWrite8(REG_PCLK, 0x00);	*/	/* set PCLK to zero - don't clock the LCD until later, line disabled because zero is reset-default and we just did a reset */
 		
 		/* Initialize Display */
 		memWrite16(REG_HSIZE,   EVE_HSIZE);   /* active display width */
@@ -1077,11 +991,6 @@ namespace EVE
 		/* configure Touch */
 		memWrite8(REG_TOUCH_MODE, EVE_TMODE_CONTINUOUS); /* enable touch */
 		memWrite16(REG_TOUCH_RZTHRESH, EVE_TOUCH_RZTHRESH);	/* eliminate any false touches */
-
-		/* disable Audio for now */
-		//memWrite8(REG_VOL_PB, 0xFF); /* turn recorded audio volume down */
-		//memWrite8(REG_VOL_SOUND, 0xFF); /* turn synthesizer volume off */
-		//memWrite16(REG_SOUND, 0x6000); /* set synthesizer to mute */
 
 		/* write a basic display-list to get things started */
 		memWrite32(EVE_RAM_DL, DL_CLEAR_RGB);
@@ -1411,43 +1320,12 @@ namespace EVE
 
 
 	/* BT815 / BT816 */
-	#if EVE_GEN > 2
-
-	void Display::cmd_animdraw(int32_t ch)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ANIMDRAW);
-			port.transmit_32(ch);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_animdraw_burst(int32_t ch)
 	{
 		port.transmit_burst(CMD_ANIMDRAW);
 		port.transmit_burst(ch);
 	}
-
-
-	void Display::cmd_animframe(int16_t x0, int16_t y0, uint32_t aoptr, uint32_t frame)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ANIMFRAME);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit_32(aoptr);
-			port.transmit_32(frame);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_animframe_burst(int16_t x0, int16_t y0, uint32_t aoptr, uint32_t frame)
 	{
@@ -1457,21 +1335,6 @@ namespace EVE
 		port.transmit_burst(frame);
 	}
 
-
-	void Display::cmd_animstart(int32_t ch, uint32_t aoptr, uint32_t loop)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ANIMSTART);
-
-			port.transmit_32(ch);
-			port.transmit_32(aoptr);
-			port.transmit_32(loop);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_animstart_burst(int32_t ch, uint32_t aoptr, uint32_t loop)
 	{
 		port.transmit_burst(CMD_ANIMSTART);
@@ -1480,41 +1343,11 @@ namespace EVE
 		port.transmit_burst(loop);
 	}
 
-
-	void Display::cmd_animstop(int32_t ch)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ANIMSTOP);
-			port.transmit_32(ch);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_animstop_burst(int32_t ch)
 	{
 		port.transmit_burst(CMD_ANIMSTOP);
 		port.transmit_burst(ch);
 	}
-
-
-	void Display::cmd_animxy(int32_t ch, int16_t x0, int16_t y0)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ANIMXY);
-			port.transmit_32(ch);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_animxy_burst(int32_t ch, int16_t x0, int16_t y0)
 	{
@@ -1523,58 +1356,12 @@ namespace EVE
 		port.transmit_burst((uint32_t) x0 + ((uint32_t) y0 << 16));
 	}
 
-
-	void Display::cmd_appendf(uint32_t ptr, uint32_t num)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_APPENDF);
-			port.transmit_32(ptr);
-			port.transmit_32(num);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_appendf_burst(uint32_t ptr, uint32_t num)
 	{
 		port.transmit_burst(CMD_APPENDF);
 		port.transmit_burst(ptr);
 		port.transmit_burst(num);
 	}
-
-
-
-	uint16_t Display::cmd_bitmap_transform(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2)
-	{
-		if(!cmd_burst)
-		{
-			uint16_t cmdoffset;
-
-			begin_cmd(CMD_BITMAP_TRANSFORM);
-			port.transmit_32(x0);
-			port.transmit_32(y0);
-			port.transmit_32(x1);
-			port.transmit_32(y1);
-			port.transmit_32(x2);
-			port.transmit_32(y2);
-			port.transmit_32(tx0);
-			port.transmit_32(ty0);
-			port.transmit_32(tx1);
-			port.transmit_32(ty1);
-			port.transmit_32(tx2);
-			port.transmit_32(ty2);
-			port.transmit_32(0);
-			port.cs_clear();
-			while (busy());
-			cmdoffset = memRead16(REG_CMD_WRITE);  /* read the graphics processor write pointer */
-			cmdoffset -= 4;
-			cmdoffset &= 0x0fff;
-			return (memRead32(EVE_RAM_CMD + cmdoffset));
-		}
-		return 0;
-	}
-
 
 	/* note: as this is meant for use in burst-mode display-list generation the result parameter is ignored */
 	void Display::cmd_bitmap_transform_burst( int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2)
@@ -1595,49 +1382,11 @@ namespace EVE
 		port.transmit_burst(0);
 	}
 
-
-	void Display::cmd_fillwidth(uint32_t s)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_FILLWIDTH);
-			port.transmit_32(s);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_fillwidth_burst(uint32_t s)
 	{
 		port.transmit_burst(CMD_FILLWIDTH);
 		port.transmit_burst(s);
 	}
-
-
-	void Display::cmd_gradienta(int16_t x0, int16_t y0, uint32_t argb0, int16_t x1, int16_t y1, uint32_t argb1)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_GRADIENTA);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit_32(argb0);
-
-			port.transmit((uint8_t)(x1));
-			port.transmit((uint8_t)(x1 >> 8));
-			port.transmit((uint8_t)(y1));
-			port.transmit((uint8_t)(y1 >> 8));
-
-			port.transmit_32(argb1);
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_gradienta_burst(int16_t x0, int16_t y0, uint32_t argb0, int16_t x1, int16_t y1, uint32_t argb1)
 	{
@@ -1648,21 +1397,6 @@ namespace EVE
 		port.transmit_burst(argb1);
 	}
 
-
-	void Display::cmd_rotatearound(int32_t x0, int32_t y0, int32_t angle, int32_t scale)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ROTATEAROUND);
-			port.transmit_32(x0);
-			port.transmit_32(y0);
-			port.transmit_32(angle);
-			port.transmit_32(scale);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_rotatearound_burst(int32_t x0, int32_t y0, int32_t angle, int32_t scale)
 	{
 		port.transmit_burst(CMD_ROTATEAROUND);
@@ -1671,52 +1405,6 @@ namespace EVE
 		port.transmit_burst(angle);
 		port.transmit_burst(scale);
 	}
-
-
-	/* as the name implies, "num_args" is the number of arguments passed to this function as variadic arguments */
-	void Display::cmd_button_var(int16_t x0, int16_t y0, int16_t w0, int16_t h0, int16_t font, uint16_t options, const char* text, uint8_t num_args, ...)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_BUTTON);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			private_string_write(text);
-
-			if(options & EVE_OPT_FORMAT)
-			{
-				va_list arguments;
-				uint8_t counter;
-				uint32_t data;
-
-				va_start(arguments, num_args);
-
-				for(counter=0;counter<num_args;counter++)
-				{
-					data = (uint32_t) va_arg(arguments, int);
-					port.transmit_32(data);
-				}
-
-				va_end(arguments);
-			}
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_button_var_burst(int16_t x0, int16_t y0, int16_t w0, int16_t h0, int16_t font, uint16_t options, const char* text, uint8_t num_args, ...)
 	{
@@ -1741,46 +1429,6 @@ namespace EVE
 		}
 	}
 
-
-	/* as the name implies, "num_args" is the number of arguments passed to this function as variadic arguments */
-	void Display::cmd_text_var(int16_t x0, int16_t y0, int16_t font, uint16_t options, const char* text, uint8_t num_args, ...)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_TEXT);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			private_string_write(text);
-
-			if(options & EVE_OPT_FORMAT)
-			{
-				va_list arguments;
-				uint8_t counter;
-				uint32_t data;
-
-				va_start(arguments, num_args);
-
-				for(counter=0;counter<num_args;counter++)
-				{
-					data = (uint32_t) va_arg(arguments, int);
-					port.transmit_32(data);
-				}
-				va_end(arguments);
-			}
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_text_var_burst(int16_t x0, int16_t y0, int16_t font, uint16_t options, const char* text, uint8_t num_args, ...)
 	{
 		port.transmit_burst(CMD_TEXT);
@@ -1788,7 +1436,6 @@ namespace EVE
 		port.transmit_burst((uint32_t) font + ((uint32_t) options << 16));
 		private_string_write(text);
 
-		#if EVE_GEN > 2
 		if(options & EVE_OPT_FORMAT)
 		{
 			va_list arguments;
@@ -1802,54 +1449,7 @@ namespace EVE
 			}
 			va_end(arguments);
 		}
-		#endif
 	}
-
-
-	/* as the name implies, "num_args" is the number of arguments passed to this function as variadic arguments */
-	void Display::cmd_toggle_var(int16_t x0, int16_t y0, int16_t w0, int16_t font, uint16_t options, uint16_t state, const char* text, uint8_t num_args, ...)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_TOGGLE);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-			port.transmit((uint8_t)(state));
-			port.transmit((uint8_t)(state >> 8));
-
-			private_string_write(text);
-
-			if(options & EVE_OPT_FORMAT)
-			{
-				va_list arguments;
-				uint8_t counter;
-				uint32_t data;
-
-				va_start(arguments, num_args);
-
-				for(counter=0;counter<num_args;counter++)
-				{
-					data = (uint32_t) va_arg(arguments, int);
-					port.transmit_32(data);
-				}
-
-				va_end(arguments);
-			}
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_toggle_var_burst(int16_t x0, int16_t y0, int16_t w0, int16_t font, uint16_t options, uint16_t state, const char* text, uint8_t num_args, ...)
 	{
@@ -1874,9 +1474,6 @@ namespace EVE
 			va_end(arguments);
 		}
 	}
-
-	#endif /* EVE_GEN > 2 */
-
 
 
 	/* generic function for all commands that have no arguments and all display-list specific control words */
@@ -1904,19 +1501,6 @@ namespace EVE
 		port.transmit_burst(command);
 	}
 
-
-	void Display::cmd_append(uint32_t ptr, uint32_t num)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_APPEND);
-			port.transmit_32(ptr);
-			port.transmit_32(num);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_append_burst(uint32_t ptr, uint32_t num)
 	{
 		port.transmit_burst(CMD_APPEND);
@@ -1924,57 +1508,11 @@ namespace EVE
 		port.transmit_burst(num);
 	}
 
-
-	void Display::cmd_bgcolor(uint32_t color)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_BGCOLOR);
-			port.transmit((uint8_t)(color));
-			port.transmit((uint8_t)(color >> 8));
-			port.transmit((uint8_t)(color >> 16));
-			port.transmit(0x00);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_bgcolor_burst(uint32_t color)
 	{
 		port.transmit_burst(CMD_BGCOLOR);
 		port.transmit_burst(color);
 	}
-
-
-	void Display::cmd_button(int16_t x0, int16_t y0, int16_t w0, int16_t h0, int16_t font, uint16_t options, const char* text)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_BUTTON);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			private_string_write(text);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_button_burst(int16_t x0, int16_t y0, int16_t w0, int16_t h0, int16_t font, uint16_t options, const char* text)
 	{
@@ -1996,37 +1534,6 @@ namespace EVE
 		}
 	}
 
-
-	void Display::cmd_clock(int16_t x0, int16_t y0, int16_t r0, uint16_t options, uint16_t hours, uint16_t minutes, uint16_t seconds, uint16_t millisecs)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_CLOCK);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(r0));
-			port.transmit((uint8_t)(r0 >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			port.transmit((uint8_t)(hours));
-			port.transmit((uint8_t)(hours >> 8));
-			port.transmit((uint8_t)(minutes));
-			port.transmit((uint8_t)(minutes >> 8));
-
-			port.transmit((uint8_t)(seconds));
-			port.transmit((uint8_t)(seconds >> 8));
-			port.transmit((uint8_t)(millisecs));
-			port.transmit((uint8_t)(millisecs >> 8));
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_clock_burst(int16_t x0, int16_t y0, int16_t r0, uint16_t options, uint16_t hours, uint16_t minutes, uint16_t seconds, uint16_t millisecs)
 	{
 		port.transmit_burst(CMD_CLOCK);
@@ -2036,33 +1543,6 @@ namespace EVE
 		port.transmit_burst((uint32_t) seconds + ((uint32_t) millisecs << 16));
 	}
 
-
-	void Display::cmd_dial(int16_t x0, int16_t y0, int16_t r0, uint16_t options, uint16_t val)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_DIAL);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(r0));
-			port.transmit((uint8_t)(r0 >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			port.transmit((uint8_t)(val));
-			port.transmit((uint8_t)(val >> 8));
-			port.transmit(0);
-			port.transmit(0);
-
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_dial_burst(int16_t x0, int16_t y0, int16_t r0, uint16_t options, uint16_t val)
 	{
 		port.transmit_burst(CMD_DIAL);
@@ -2071,58 +1551,11 @@ namespace EVE
 		port.transmit_burst(val);
 	}
 
-
-	void Display::cmd_fgcolor(uint32_t color)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_FGCOLOR);
-			port.transmit((uint8_t)(color));
-			port.transmit((uint8_t)(color >> 8));
-			port.transmit((uint8_t)(color >> 16));
-			port.transmit(0x00);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_fgcolor_burst(uint32_t color)
 	{
 		port.transmit_burst(CMD_FGCOLOR);
 		port.transmit_burst(color);
 	}
-
-
-	void Display::cmd_gauge(int16_t x0, int16_t y0, int16_t r0, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_GAUGE);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(r0));
-			port.transmit((uint8_t)(r0 >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			port.transmit((uint8_t)(major));
-			port.transmit((uint8_t)(major >> 8));
-			port.transmit((uint8_t)(minor));
-			port.transmit((uint8_t)(minor >> 8));
-
-			port.transmit((uint8_t)(val));
-			port.transmit((uint8_t)(val >> 8));
-			port.transmit((uint8_t)(range));
-			port.transmit((uint8_t)(range >> 8));
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_gauge_burst(int16_t x0, int16_t y0, int16_t r0, uint16_t options, uint16_t major, uint16_t minor, uint16_t val, uint16_t range)
 	{
@@ -2181,58 +1614,11 @@ namespace EVE
 		}
 	}
 
-
-	void Display::cmd_gradcolor(uint32_t color)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_GRADCOLOR);
-			port.transmit((uint8_t)(color));
-			port.transmit((uint8_t)(color >> 8));
-			port.transmit((uint8_t)(color >> 16));
-			port.transmit(0x00);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_gradcolor_burst(uint32_t color)
 	{
 		port.transmit_burst(CMD_GRADCOLOR);
 		port.transmit_burst(color);
 	}
-
-
-	void Display::cmd_gradient(int16_t x0, int16_t y0, uint32_t rgb0, int16_t x1, int16_t y1, uint32_t rgb1)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_GRADIENT);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(rgb0));
-			port.transmit((uint8_t)(rgb0 >> 8));
-			port.transmit((uint8_t)(rgb0 >> 16));
-			port.transmit(0x00);
-
-			port.transmit((uint8_t)(x1));
-			port.transmit((uint8_t)(x1 >> 8));
-			port.transmit((uint8_t)(y1));
-			port.transmit((uint8_t)(y1 >> 8));
-
-			port.transmit((uint8_t)(rgb1));
-			port.transmit((uint8_t)(rgb1 >> 8));
-			port.transmit((uint8_t)(rgb1 >> 16));
-			port.transmit(0x00);
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_gradient_burst(int16_t x0, int16_t y0, uint32_t rgb0, int16_t x1, int16_t y1, uint32_t rgb1)
 	{
@@ -2242,34 +1628,6 @@ namespace EVE
 		port.transmit_burst((uint32_t) x1 + ((uint32_t) y1 << 16));
 		port.transmit_burst(rgb1);
 	}
-
-
-	void Display::cmd_keys(int16_t x0, int16_t y0, int16_t w0, int16_t h0, int16_t font, uint16_t options, const char* text)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_KEYS);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			private_string_write(text);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_keys_burst(int16_t x0, int16_t y0, int16_t w0, int16_t h0, int16_t font, uint16_t options, const char* text)
 	{
@@ -2281,66 +1639,12 @@ namespace EVE
 		private_string_write(text);
 	}
 
-
-	void Display::cmd_number(int16_t x0, int16_t y0, int16_t font, uint16_t options, int32_t number)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_NUMBER);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			port.transmit_32(number);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_number_burst(int16_t x0, int16_t y0, int16_t font, uint16_t options, int32_t number)
 	{
 		port.transmit_burst(CMD_NUMBER);
 		port.transmit_burst((uint32_t) x0 + ((uint32_t) y0 << 16));
 		port.transmit_burst((uint32_t) font + ((uint32_t) options << 16));
 		port.transmit_burst(number);
-	}
-
-
-	void Display::cmd_progress(int16_t x0, int16_t y0, int16_t w0, int16_t h0, uint16_t options, uint16_t val, uint16_t range)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_PROGRESS);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-			port.transmit((uint8_t)(val));
-			port.transmit((uint8_t)(val >> 8));
-
-			port.transmit((uint8_t)(range));
-			port.transmit((uint8_t)(range >> 8));
-			port.transmit(0x00);	/* dummy byte for 4-byte alignment */
-			port.transmit(0x00); /* dummy byte for 4-byte alignment */
-
-			port.cs_clear();
-		}
 	}
 
 
@@ -2353,28 +1657,6 @@ namespace EVE
 		port.transmit_burst(range);
 	}
 
-
-	void Display::cmd_romfont(uint32_t font, uint32_t romslot)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ROMFONT);
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-			port.transmit(0x00);
-			port.transmit(0x00);
-
-			port.transmit((uint8_t)(romslot));
-			port.transmit((uint8_t)(romslot >> 8));
-			port.transmit(0x00);
-			port.transmit(0x00);
-
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_romfont_burst(uint32_t font, uint32_t romslot)
 	{
 		port.transmit_burst(CMD_ROMFONT);
@@ -2382,36 +1664,11 @@ namespace EVE
 		port.transmit_burst(romslot);
 	}
 
-
-	void Display::cmd_rotate(int32_t angle)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_ROTATE);
-			port.transmit_32(angle);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_rotate_burst(int32_t angle)
 	{
 		port.transmit_burst(CMD_ROTATE);
 		port.transmit_burst(angle);
 	}
-
-
-	void Display::cmd_scale(int32_t sx, int32_t sy)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SCALE);
-			port.transmit_32(sx);
-			port.transmit_32(sy);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_scale_burst(int32_t sx, int32_t sy)
 	{
@@ -2419,38 +1676,6 @@ namespace EVE
 		port.transmit_burst(sx);
 		port.transmit_burst(sy);
 	}
-
-
-	void Display::cmd_scrollbar(int16_t x0, int16_t y0, int16_t w0, int16_t h0, uint16_t options, uint16_t val, uint16_t size, uint16_t range)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SCROLLBAR);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-			port.transmit((uint8_t)(val));
-			port.transmit((uint8_t)(val >> 8));
-
-			port.transmit((uint8_t)(size));
-			port.transmit((uint8_t)(size >> 8));
-			port.transmit((uint8_t)(range));
-			port.transmit((uint8_t)(range >> 8));
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_scrollbar_burst(int16_t x0, int16_t y0, int16_t w0, int16_t h0, uint16_t options, uint16_t val, uint16_t size, uint16_t range)
 	{
@@ -2461,46 +1686,11 @@ namespace EVE
 		port.transmit_burst((uint32_t) size + ((uint32_t) range << 16));
 	}
 
-
-	void Display::cmd_setbase(uint32_t base)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SETBASE);
-			port.transmit_32(base);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_setbase_burst(uint32_t base)
 	{
 		port.transmit_burst(CMD_SETBASE);
 		port.transmit_burst(base);
 	}
-
-
-	void Display::cmd_setbitmap(uint32_t addr, uint16_t fmt, uint16_t width, uint16_t height)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SETBITMAP);
-			port.transmit_32(addr);
-
-			port.transmit((uint8_t)(fmt));
-			port.transmit((uint8_t)(fmt>> 8));
-			port.transmit((uint8_t)(width));
-			port.transmit((uint8_t)(width >> 8));
-
-			port.transmit((uint8_t)(height));
-			port.transmit((uint8_t)(height >> 8));
-			port.transmit(0);
-			port.transmit(0);
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_setbitmap_burst(uint32_t addr, uint16_t fmt, uint16_t width, uint16_t height)
 	{
@@ -2510,39 +1700,12 @@ namespace EVE
 		port.transmit_burst(height);
 	}
 
-
-	void Display::cmd_setfont(uint32_t font, uint32_t ptr)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SETFONT);
-			port.transmit_32(font);
-			port.transmit_32(ptr);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_setfont_burst(uint32_t font, uint32_t ptr)
 	{
 		port.transmit_burst(CMD_SETFONT);
 		port.transmit_burst(font);
 		port.transmit_burst(ptr);
 	}
-
-
-	void Display::cmd_setfont2(uint32_t font, uint32_t ptr, uint32_t firstchar)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SETFONT2);
-			port.transmit_32(font);
-			port.transmit_32(ptr);
-			port.transmit_32(firstchar);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_setfont2_burst(uint32_t font, uint32_t ptr, uint32_t firstchar)
 	{
@@ -2552,52 +1715,11 @@ namespace EVE
 		port.transmit_burst(firstchar);
 	}
 
-
-	void Display::cmd_setscratch(uint32_t handle)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SETSCRATCH);
-			port.transmit_32(handle);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_setscratch_burst(uint32_t handle)
 	{
 		port.transmit_burst(CMD_SETSCRATCH);
 		port.transmit_burst(handle);
 	}
-
-
-	void Display::cmd_sketch(int16_t x0, int16_t y0, uint16_t w0, uint16_t h0, uint32_t ptr, uint16_t format)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SKETCH);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit_32(ptr);
-
-			port.transmit((uint8_t)(format));
-			port.transmit((uint8_t)(format >> 8));
-			port.transmit(0);
-			port.transmit(0);
-
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_sketch_burst(int16_t x0, int16_t y0, uint16_t w0, uint16_t h0, uint32_t ptr, uint16_t format)
 	{
@@ -2608,38 +1730,6 @@ namespace EVE
 		port.transmit_burst(format);
 	}
 
-
-	void Display::cmd_slider(int16_t x0, int16_t y0, int16_t w0, int16_t h0, uint16_t options, uint16_t val, uint16_t range)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SLIDER);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(h0));
-			port.transmit((uint8_t)(h0 >> 8));
-
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-			port.transmit((uint8_t)(val));
-			port.transmit((uint8_t)(val >> 8));
-
-			port.transmit((uint8_t)(range));
-			port.transmit((uint8_t)(range >> 8));
-			port.transmit(0x00); /* dummy byte for 4-byte alignment */
-			port.transmit(0x00); /* dummy byte for 4-byte alignment */
-
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_slider_burst(int16_t x0, int16_t y0, int16_t w0, int16_t h0, uint16_t options, uint16_t val, uint16_t range)
 	{
 		port.transmit_burst(CMD_SLIDER);
@@ -2649,57 +1739,12 @@ namespace EVE
 		port.transmit_burst(range);
 	}
 
-
-	void Display::cmd_spinner(int16_t x0, int16_t y0, uint16_t style, uint16_t scale)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_SPINNER);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(style));
-			port.transmit((uint8_t)(style >> 8));
-			port.transmit((uint8_t)(scale));
-			port.transmit((uint8_t)(scale >> 8));
-
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_spinner_burst(int16_t x0, int16_t y0, uint16_t style, uint16_t scale)
 	{
 		port.transmit_burst(CMD_SPINNER);
 		port.transmit_burst((uint32_t) x0 + ((uint32_t) y0 << 16));
 		port.transmit_burst((uint32_t) style + ((uint32_t) scale << 16));
 	}
-
-
-	void Display::cmd_text(int16_t x0, int16_t y0, int16_t font, uint16_t options, const char* text)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_TEXT);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-
-			private_string_write(text);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_text_burst(int16_t x0, int16_t y0, int16_t font, uint16_t options, const char* text)
 	{
@@ -2708,34 +1753,6 @@ namespace EVE
 		port.transmit_burst((uint32_t) font + ((uint32_t) options << 16));
 		private_string_write(text);
 	}
-
-
-	void Display::cmd_toggle(int16_t x0, int16_t y0, int16_t w0, int16_t font, uint16_t options, uint16_t state, const char* text)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_TOGGLE);
-
-			port.transmit((uint8_t)(x0));
-			port.transmit((uint8_t)(x0 >> 8));
-			port.transmit((uint8_t)(y0));
-			port.transmit((uint8_t)(y0 >> 8));
-
-			port.transmit((uint8_t)(w0));
-			port.transmit((uint8_t)(w0 >> 8));
-			port.transmit((uint8_t)(font));
-			port.transmit((uint8_t)(font >> 8));
-
-			port.transmit((uint8_t)(options));
-			port.transmit((uint8_t)(options >> 8));
-			port.transmit((uint8_t)(state));
-			port.transmit((uint8_t)(state >> 8));
-
-			private_string_write(text);
-			port.cs_clear();
-		}
-	}
-
 
 	void Display::cmd_toggle_burst(int16_t x0, int16_t y0, int16_t w0, int16_t font, uint16_t options, uint16_t state, const char* text)
 	{
@@ -2746,19 +1763,6 @@ namespace EVE
 		private_string_write(text);
 	}
 
-
-	void Display::cmd_translate(int32_t tx, int32_t ty)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(CMD_TRANSLATE);
-			port.transmit_32(tx);
-			port.transmit_32(ty);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::cmd_translate_burst(int32_t tx, int32_t ty)
 	{
 		port.transmit_burst(CMD_TRANSLATE);
@@ -2766,128 +1770,8 @@ namespace EVE
 		port.transmit_burst(ty);
 	}
 
-
-	void Display::color_rgb(uint32_t color)
-	{
-		if(!cmd_burst)
-		{
-			begin_cmd(DL_COLOR_RGB | color);
-			port.cs_clear();
-		}
-	}
-
-
 	void Display::color_rgb_burst(uint32_t color)
 	{
 		port.transmit_burst(DL_COLOR_RGB | color);
-	}
-
-
-	/*---------------------------------------------------------------------------------------------------------------------------*/
-	/*-------- special purpose functions ------------------- --------------------------------------------------------------------*/
-	/*---------------------------------------------------------------------------------------------------------------------------*/
-
-
-	/* this is meant to be called outside display-list building */
-	/* this function displays an interactive calibration screen, calculates the calibration values and */
-	/* writes the new values to the touch matrix registers of EVE */
-	/* unlike the built-in cmd_calibrate() of EVE this also works with displays that are cut down from larger ones like EVE2-38A / EVE2-38G */
-	/* the height is needed as parameter as EVE_VSIZE for the EVE2-38 is 272 but the visible size is only 116 */
-	/* so the call would be EVE_calibrate_manual(116); for the EVE2-38A and EVE2-38G while for most other displays */
-	/* using EVE_calibrate_manual(EVE_VSIZE) would work - but for normal displays the built-in cmd_calibrate would work as expected anyways */
-	/* this code was taken from the MatrixOrbital EVE2-Library on Github, adapted and modified */
-	void Display::calibrate_manual(uint16_t height)
-	{
-		uint32_t displayX[3], displayY[3];
-		uint32_t touchX[3], touchY[3];
-		uint32_t touchValue;
-		int32_t tmp, k;
-		int32_t TransMatrix[6];
-		uint8_t count = 0;
-		char num[2];
-		uint8_t touch_lock = 1;
-
-		/* these values determine where your calibration points will be drawn on your display */
-		displayX[0] = (EVE_HSIZE * 0.15);
-		displayY[0] = (height * 0.15);
-
-		displayX[1] = (EVE_HSIZE * 0.85);
-		displayY[1] = (height / 2);
-
-		displayX[2] = (EVE_HSIZE / 2);
-		displayY[2] = (height * 0.85);
-
-		while (count < 3)
-		{
-			cmd_dl(CMD_DLSTART);
-			cmd_dl(DL_CLEAR_RGB | 0x000000);
-			cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
-
-			/* draw Calibration Point on screen */
-			cmd_dl(DL_COLOR_RGB | 0x0000ff);
-			cmd_dl(POINT_SIZE(20*16));
-			cmd_dl((DL_BEGIN | EVE_POINTS));
-			cmd_dl(VERTEX2F((uint32_t)(displayX[count]) * 16, (uint32_t)((displayY[count])) * 16));
-			cmd_dl(DL_END);
-			cmd_dl(DL_COLOR_RGB | 0xffffff);
-			cmd_text((EVE_HSIZE/2), 50, 27, EVE_OPT_CENTER, "Please tap on the dot.");
-			num[0] = count + 0x31; num[1] = 0; /* null terminated string of one character */
-			cmd_text(displayX[count], displayY[count], 27, EVE_OPT_CENTER, num);
-
-			cmd_dl(DL_DISPLAY);
-			cmd_dl(CMD_SWAP);
-			while (busy());
-
-			while(1)
-			{
-				touchValue = memRead32(REG_TOUCH_DIRECT_XY); /* read for any new touch tag inputs */
-
-				if(touch_lock)
-				{
-					if(touchValue & 0x80000000) /* check if we have no touch */
-					{
-						touch_lock = 0;
-					}
-				}
-				else
-				{
-					if (!(touchValue & 0x80000000)) /* check if a touch is detected */
-					{
-						touchX[count] = (touchValue>>16) & 0x03FF; /* raw Touchscreen Y coordinate */
-						touchY[count] = touchValue & 0x03FF; /* raw Touchscreen Y coordinate */
-						touch_lock = 1;
-						count++;
-						break; /* leave while(1) */
-					}
-				}
-			}
-		}
-
-		k = ((touchX[0] - touchX[2])*(touchY[1] - touchY[2])) - ((touchX[1] - touchX[2])*(touchY[0] - touchY[2]));
-
-		tmp = (((displayX[0] - displayX[2]) * (touchY[1] - touchY[2])) - ((displayX[1] - displayX[2])*(touchY[0] - touchY[2])));
-		TransMatrix[0] = ((int64_t)tmp << 16) / k;
-
-		tmp = (((touchX[0] - touchX[2]) * (displayX[1] - displayX[2])) - ((displayX[0] - displayX[2])*(touchX[1] - touchX[2])));
-		TransMatrix[1] = ((int64_t)tmp << 16) / k;
-
-		tmp = ((touchY[0] * (((touchX[2] * displayX[1]) - (touchX[1] * displayX[2])))) + (touchY[1] * (((touchX[0] * displayX[2]) - (touchX[2] * displayX[0])))) + (touchY[2] * (((touchX[1] * displayX[0]) - (touchX[0] * displayX[1])))));
-		TransMatrix[2] = ((int64_t)tmp << 16) / k;
-
-		tmp = (((displayY[0] - displayY[2]) * (touchY[1] - touchY[2])) - ((displayY[1] - displayY[2])*(touchY[0] - touchY[2])));
-		TransMatrix[3] = ((int64_t)tmp << 16) / k;
-
-		tmp = (((touchX[0] - touchX[2]) * (displayY[1] - displayY[2])) - ((displayY[0] - displayY[2])*(touchX[1] - touchX[2])));
-		TransMatrix[4] = ((int64_t)tmp << 16) / k;
-
-		tmp = ((touchY[0] * (((touchX[2] * displayY[1]) - (touchX[1] * displayY[2])))) + (touchY[1] * (((touchX[0] * displayY[2]) - (touchX[2] * displayY[0])))) + (touchY[2] * (((touchX[1] * displayY[0]) - (touchX[0] * displayY[1])))));
-		TransMatrix[5] = ((int64_t)tmp << 16) / k;
-
-		memWrite32(REG_TOUCH_TRANSFORM_A, TransMatrix[0]);
-		memWrite32(REG_TOUCH_TRANSFORM_B, TransMatrix[1]);
-		memWrite32(REG_TOUCH_TRANSFORM_C, TransMatrix[2]);
-		memWrite32(REG_TOUCH_TRANSFORM_D, TransMatrix[3]);
-		memWrite32(REG_TOUCH_TRANSFORM_E, TransMatrix[4]);
-		memWrite32(REG_TOUCH_TRANSFORM_F, TransMatrix[5]);
 	}
 }
