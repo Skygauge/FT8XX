@@ -59,99 +59,49 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #include <Arduino.h>
 #include <stdio.h>
 #include <SPI.h>
-#define EVE_DMA
+
+/* EVE Memory Commands - used with memWritexx and memReadxx */
+#define MEM_WRITE	0x80 /* EVE Host Memory Write */
+#define MEM_READ	0x00 /* EVE Host Memory Read */
 
 namespace EVE
 {
 	class Port
 	{
-	public:
-		void dma_done();
-
+	private:
         const uint8_t cs, reset;
-
-		Port(uint8_t CS, uint8_t RESET);
-
-        void init(int speed = 11000000)
-        {
-            SPI.begin();
-            SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
-            pinMode(cs, OUTPUT);
-            pinMode(reset, OUTPUT);
-		    cs_clear();
-            pdn_set();
-            delay(1);
-            pdn_clear();
-            cs_set();
-        }
-
-        void set_speed(int speed = 22000000)
-        {
-            SPI.endTransaction();
-            SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
-        }
-
 		EventResponder spi_event;
 		uint32_t buffer[1025];
 		volatile uint16_t dma_buffer_index;
 		volatile uint8_t dma_busy;
 
-		void dma_transfer(void);
+    public:
+		Port(uint8_t CS, uint8_t RESET);
 
-		void cs_set(void)
-		{
-			digitalWriteFast(cs, LOW); /* make EVE listen */
-		}
+        void init(int speed = 11000000);
+        void set_speed(int speed = 22000000);
 
-		void cs_clear(void)
-		{
-			digitalWriteFast(cs, HIGH); /* tell EVE to stop listen */
-		}
+		void cs_set();
+		void cs_clear();
+        
+		void pdn_set();
+		void pdn_clear();
 
-		void transmit(uint8_t data)
-		{
-			SPI.transfer(data);
-		}
+        //DMA functions
+        void dma_begin(uint32_t ftAddress);
+		void dma_transfer();
+		void dma_done();
+        bool is_dma_busy();
+		void transmit_dma(uint32_t data);
 
-		void transmit(uint8_t * data, uint len)
-		{
-			SPI.transfer(data, len);
-		}
 
-		void transmit(const uint8_t * data, uint len)
-		{
-			for(uint i = 0 ; i < len; i++) SPI.transfer(data[i]);
-			//SPI.transfer(data, len);
-		}
+        //Regular writes (non-DMA)
+		void transmit(uint8_t data);
+		void transmit(uint8_t * data, uint len);
+		void transmit(const uint8_t * data, uint len);
+		void transmit_32(uint32_t data);
+		uint8_t receive(uint8_t data);
 
-		void transmit_32(uint32_t data)
-		{
-			transmit((uint8_t)(data));
-			transmit((uint8_t)(data >> 8));
-			transmit((uint8_t)(data >> 16));
-			transmit((uint8_t)(data >> 24));
-		}
-
-		/* spi_transmit_burst() is only used for cmd-FIFO commands so it *always* has to transfer 4 bytes */
-		inline void transmit_burst(uint32_t data)
-		{
-			buffer[dma_buffer_index++] = data;
-		}
-
-		uint8_t receive(uint8_t data)
-		{
-			return SPI.transfer(data);
-		}
-
-		void pdn_set(void)
-		{
-			digitalWriteFast(reset, LOW); /* go into power-down */
-		}
-
-		void pdn_clear(void)
-		{
-			digitalWriteFast(reset, HIGH); /* power up */
-		}
 	};
 };
 
