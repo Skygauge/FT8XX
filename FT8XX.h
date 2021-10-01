@@ -602,7 +602,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define V2F(x, y) ((1UL<<30) | (((int16_t)(max(x, 0.0f)))<<15) | ((int16_t)(max(y, 0.0f))))
 
 /* EVE Generation 3: BT815 / BT816 definitions -----------------*/
-#if EVE_GEN > 2
 
 #define EVE_GLFORMAT 31UL	/* used with BITMAP_LAYOUT to indicate bitmap-format is specified by BITMAP_EXT_FORMAT */
 
@@ -692,8 +691,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define BITMAP_TRANSFORM_B(b) BITMAP_TRANSFORM_B_EXT(0,b)
 #define BITMAP_TRANSFORM_D(d) BITMAP_TRANSFORM_D_EXT(0,d)
 #define BITMAP_TRANSFORM_E(e) BITMAP_TRANSFORM_E_EXT(0,e)
-
-#endif  /* EVE_GEN > 2 */
 
 
 /* EVE Generation 4: BT817 / BT818 definitions -----------------*/

@@ -64,6 +64,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define MEM_WRITE	0x80 /* EVE Host Memory Write */
 #define MEM_READ	0x00 /* EVE Host Memory Read */
 
+#define DMA_TIMEOUT 15000
+
 namespace EVE
 {
 	class Port
@@ -74,12 +76,13 @@ namespace EVE
 		uint32_t buffer[1025];
 		volatile uint16_t dma_buffer_index;
 		volatile uint8_t dma_busy;
+        elapsedMicros dma_period;
 
     public:
 		Port(uint8_t CS, uint8_t RESET);
 
         void init(int speed = 11000000);
-        void set_speed(int speed = 22000000);
+        void set_speed(int speed = 28000000);
 
 		void cs_set();
 		void cs_clear();
@@ -90,10 +93,9 @@ namespace EVE
         //DMA functions
         void dma_begin(uint32_t ftAddress);
 		void dma_transfer();
-		void dma_done();
+		void dma_finish();
         bool is_dma_busy();
 		void transmit_dma(uint32_t data);
-
 
         //Regular writes (non-DMA)
 		void transmit(uint8_t data);

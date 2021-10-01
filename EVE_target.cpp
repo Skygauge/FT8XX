@@ -5,26 +5,25 @@ namespace EVE
 	/* Callback for end-of-DMA-transfer */
 	static void dma_callback(EventResponderRef event_responder)
 	{
-		((Port*)(event_responder.getContext()))->dma_done();
+		((Port*)(event_responder.getContext()))->dma_finish();
 	}
 
 	Port::Port(uint8_t CS, uint8_t RESET) : cs(CS), reset(RESET)
     {
         spi_event.setContext(this);
         spi_event.attachImmediate(dma_callback);
+        SPI.begin();
     };
 
     void Port::init(int speed)
     {
-        SPI.begin();
-        SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
+        set_speed(speed);
         pinMode(cs, OUTPUT);
         pinMode(reset, OUTPUT);
         cs_clear();
         pdn_set();
         delay(1);
         pdn_clear();
-        cs_set();
     }
 
     void Port::set_speed(int speed)
@@ -40,7 +39,7 @@ namespace EVE
         dma_buffer_index = 1;
     }
 
-	void Port::dma_done()
+	void Port::dma_finish()
 	{
 		dma_busy = 0;
 		cs_clear();
@@ -51,10 +50,15 @@ namespace EVE
 		cs_set();
 		dma_busy = 42;
 		SPI.transfer( ((uint8_t *) &buffer[0])+1, NULL, (((dma_buffer_index)*4)-1), spi_event);
+        dma_period = 0;
 	}
 
     bool Port::is_dma_busy()
     {
+        if(dma_busy && (dma_period > DMA_TIMEOUT)) {
+            dma_busy = 0;
+            Serial.println("DMA TIMEOUT!");
+        }
         return dma_busy;
     }
 
