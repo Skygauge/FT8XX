@@ -86,7 +86,7 @@ namespace EVE
 
 		void cs_set();
 		void cs_clear();
-        
+
 		void pdn_set();
 		void pdn_clear();
 

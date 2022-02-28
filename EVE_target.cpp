@@ -1,5 +1,7 @@
 #include "EVE_target.h"
 
+#define DEBUG_SERIAL false
+
 namespace EVE
 {
 	/* Callback for end-of-DMA-transfer */
@@ -57,7 +59,9 @@ namespace EVE
     {
         if(dma_busy && (dma_period > DMA_TIMEOUT)) {
             dma_busy = 0;
+#if DEBUG_SERIAL
             Serial.println("DMA TIMEOUT!");
+#endif
         }
         return dma_busy;
     }

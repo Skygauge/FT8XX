@@ -1,9 +1,9 @@
 # EVE2 / EVE3 / EVE4 code library
 This is a code library for EVE2/EVE3/EVE4 graphics controller ICs from FTDI/Bridgetek:
 
-http://www.ftdichip.com/EVE.htm  
-http://brtchip.com/eve/  
-http://brtchip.com/ft81x/  
+http://www.ftdichip.com/EVE.htm
+http://brtchip.com/eve/
+http://brtchip.com/ft81x/
 https://brtchip.com/bt81x/
 
 It contains code for and has been used with various micro-controllers and displays.
@@ -45,7 +45,7 @@ First of all, support for FT80x is gone. The main reason is that this allowed a 
 Then there is a hard break from FT80x to FT81x with ony 256k of memory in FT80x but 1MB in FT81x. The memory map is different and all the registers are located elsewhere.
 FT810, FT811, FT812, FT813, BT815, BT816, BT817 and BT818 can use the exact same code as long none of the new features of BT81x are used - and there are plenty of modules with these available to choose from
 
-As a side effect all commands are automatically started now. 
+As a side effect all commands are automatically started now.
 
 Second is that there are two sets of display-list building command functions now: EVE_cmd_xxx() and EVE_cmd_xxx_burst().
 The EVE_cmd_xxx_burst() functions are optimised for speed, these are pure data transfer functions and do not even check anymore if burst mode is active.
@@ -81,16 +81,16 @@ while (EVE_busy());
 ````
 
 This does the same as the first example but faster.
-The trailing EVE_start_cmd_burst() either sets chip-select to low and sends out the three byte address.  
+The trailing EVE_start_cmd_burst() either sets chip-select to low and sends out the three byte address.
 Or if DMA is available for the target you are compiling for with support code in EVE_target.c and EVE_target.h, it writes the address to EVE_dma_buffer and sets EVE_dma_buffer_index to 1.
 
 Note the trailing "_burst" in the following functions, these are special versions of these commands that can only be used within an EVE_start_cmd_burst()/EVE_end_cmd_bust() pair.
 These functions are optimised to push out data and nothing else.
 
-The final EVE_end_cmd_bust() either pulls back the chip-select to high.  
+The final EVE_end_cmd_bust() either pulls back the chip-select to high.
 Or if we have DMA it calls EVE_start_dma_transfer() to start pushing out the buffer in the background.
 
-As we have 7 commands for EVE in these simple examples, the second one has the address overhead removed from six commands and therefore needs to transfer 18 bytes less over SPI.  
+As we have 7 commands for EVE in these simple examples, the second one has the address overhead removed from six commands and therefore needs to transfer 18 bytes less over SPI.
 So even with a small 8-bit controller that does not support DMA this is a usefull optimisation for building display lists.
 
 Using DMA has one caveat: we need to limit the transfer to <4k as we are writing to the FIFO of EVEs command co-processor. This is usually not an issue though as we can shorten the display list generation with previously generated snippets that we attach to the current list with CMD_APPEND. And when we use widgets like CMD_BUTTON or CMD_CLOCK the generated display list grows by a larger amount than what we need to put into the command-FIFO so we likely reach the 8k limit of the display-list before we hit the 4k limit of the command-FIFO.

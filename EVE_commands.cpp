@@ -2,6 +2,8 @@
 
 #include <stdarg.h>
 
+#define DEBUG_SERIAL false
+
 namespace EVE
 {
 	/*----------------------------------------------------------------------------------------------------------------------------*/
@@ -153,7 +155,7 @@ namespace EVE
 		{
 			return true;
 		}
-		
+
         return false;
 	}
 
@@ -196,7 +198,7 @@ namespace EVE
 		padding &= 3; /* 3, 2 or 1 */
 
 		port.transmit(data, len);
-		
+
 		while(padding > 0)
 		{
 			port.transmit(0);
@@ -708,7 +710,7 @@ namespace EVE
 
 	/* this is meant to be called outside display-list building, it includes executing the command and waiting for completion, does not support cmd-burst */
 	/* this is a pointless command, just use one of the memWrite* helper functions instead to directly write to EVEs memory */
-	
+
 	void Display::cmd_memwrite(uint32_t dest, const uint8_t *data, uint32_t num)
 	{
 		begin_cmd(CMD_MEMWRITE);
@@ -720,7 +722,7 @@ namespace EVE
 		port.cs_clear();
 		while (busy());
 	}
-	
+
 	/* this is meant to be called outside display-list building, it includes executing the command and waiting for completion, does not support cmd-burst */
 	void Display::cmd_memzero(uint32_t ptr, uint32_t num)
 	{
@@ -931,9 +933,11 @@ namespace EVE
 
         elapsedMicros timeout = 0;
 		while(memRead8(REG_ID) != 0x7C) /* if chipid is not 0x7c, continue to read it until it is, EVE needs a moment for it's power on self-test and configuration */
-		{			
+		{
             if(timeout > 50000) {
+#if DEBUG_SERIAL
                 Serial.printf("display init timeout on id, got %u!\r\n");
+#endif
                 port.pdn_set();
                 return false;
             }
@@ -943,7 +947,9 @@ namespace EVE
 		while (0x00 != (memRead8(REG_CPURESET) & 0x03)) /* check if EVE is in working status */
 		{
             if(timeout > 50000) {
+#if DEBUG_SERIAL
                 Serial.println("display init timeout on reset!");
+#endif
                 port.pdn_set();
                 return false;
             }
@@ -951,17 +957,17 @@ namespace EVE
 
 		/* tell EVE that we changed the frequency from default to 72MHz for BT8xx */
 		memWrite32(REG_FREQUENCY, 72000000);
-		
+
         port.set_speed();
 
 		/* we have a display with a Goodix GT911 / GT9271 touch-controller on it, so we patch our FT811 or FT813 according to AN_336 or setup a BT815 accordingly */
-		#if defined (EVE_HAS_GT911)		
-        memWrite16(REG_TOUCH_CONFIG, 0x05d0); /* switch to Goodix touch controller */		
+		#if defined (EVE_HAS_GT911)
+        memWrite16(REG_TOUCH_CONFIG, 0x05d0); /* switch to Goodix touch controller */
 		#endif
-		
+
         memWrite16(REG_GPIOX, 0x800C);
 		memWrite16(REG_GPIOX_DIR,0x800C); /* setting GPIO3 back to input, GPIO2 to output */
-		
+
 		/* Initialize Display */
 		memWrite16(REG_HSIZE,   EVE_HSIZE);   /* active display width */
 		memWrite16(REG_HCYCLE,  EVE_HCYCLE);  /* total number of clocks per line, incl front/back porch */
@@ -1009,7 +1015,7 @@ namespace EVE
         memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
         memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
         memWrite8(REG_PWM_DUTY, 0xFF); //turn on backlight
-        
+
         initialized = true;
 
 		return initialized;
