@@ -915,7 +915,7 @@ namespace EVE
     }
 
 	/* init, has to be executed with the SPI setup to 11 MHz or less as required by FT8xx / BT8xx */
-	uint8_t Display::init(const uint * TouchCalibration)
+	uint8_t Display::init(const uint32_t* touch_calibration)
 	{
         if(initialized) return false;
 
@@ -1005,12 +1005,12 @@ namespace EVE
 		#endif
 		#endif
 
-        memWrite32(REG_TOUCH_TRANSFORM_A, TouchCalibration[0]);
-        memWrite32(REG_TOUCH_TRANSFORM_B, TouchCalibration[1]);
-        memWrite32(REG_TOUCH_TRANSFORM_C, TouchCalibration[2]);
-        memWrite32(REG_TOUCH_TRANSFORM_D, TouchCalibration[3]);
-        memWrite32(REG_TOUCH_TRANSFORM_E, TouchCalibration[4]);
-        memWrite32(REG_TOUCH_TRANSFORM_F, TouchCalibration[5]);
+        memWrite32(REG_TOUCH_TRANSFORM_A, touch_calibration[0]);
+        memWrite32(REG_TOUCH_TRANSFORM_B, touch_calibration[1]);
+        memWrite32(REG_TOUCH_TRANSFORM_C, touch_calibration[2]);
+        memWrite32(REG_TOUCH_TRANSFORM_D, touch_calibration[3]);
+        memWrite32(REG_TOUCH_TRANSFORM_E, touch_calibration[4]);
+        memWrite32(REG_TOUCH_TRANSFORM_F, touch_calibration[5]);
 
         memWrite8(REG_GPIO, 0x80); /* enable the DISP signal to the LCD panel, it is set to output in REG_GPIO_DIR by default */
         memWrite8(REG_PCLK, EVE_PCLK); /* now start clocking data to the LCD panel */
