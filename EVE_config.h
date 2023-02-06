@@ -30,8 +30,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 #define EVE_CONFIG_H_
 
 
-/* select the settings for the TFT attached */
-#define EVE_EVE3_43G
+/* select the settings for the TFT attached in the HAL file */
+#include "hal.h"
 
 /* display timing parameters below */
 
